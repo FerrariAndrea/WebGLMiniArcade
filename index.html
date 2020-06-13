@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+      <!--per ricaricare sempre la pagina da zero e non usare la cache-->
+      <META HTTP-EQUIV=”Pragma” CONTENT=”no-cache”>
+      <META HTTP-EQUIV=”Cache-Control” CONTENT=”no-cache”>
+      <link rel="stylesheet" type="text/css" href="css/style.css">
+      <title>WebGLMiniArcade</title> 
+
+      <script type="text/javascript" src="lib/utility.js"></script>
+      <script type="text/javascript" src="lib/Panel2D.js"></script>
+      <script type="text/javascript" src="lib/WebGLController.js"></script>
+
+ 
+   </head>
+   
+    <body>
+        <div id="container" >            
+            <canvas id="gamePanel"></canvas>
+            <canvas id="controlPanel"></canvas>
+        </div>       
+    </body>
+
+    <script type="text/javascript">
+        function dinamicResize(){
+            var cp = document.getElementById("controlPanel");
+            var gp = document.getElementById("gamePanel");
+            cp.width=cp.clientWidth;
+            cp.height=cp.clientHeight;
+            gp.width=gp.clientWidth;
+            gp.height=gp.clientHeight; 
+        }       
+        var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
+        var GamePanel = new WebGLController(document.getElementById("gamePanel"));
+        dinamicResize();
+        window.addEventListener("resize",dinamicResize);
+    </script>
+    <script type="text/javascript">
+        //PER FACILITARE IL DEBUG
+        window.render2D= ControlPanel.render;            
+        window.renderGL= GamePanel.render;
+        ControlPanel.requestAnimationEnabled=true;
+        ControlPanel.render();
+    </script>
+</html>
