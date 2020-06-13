@@ -10,8 +10,14 @@
       <script type="text/javascript" src="lib/utility.js"></script>
       <script type="text/javascript" src="lib/Panel2D.js"></script>
       <script type="text/javascript" src="lib/WebGLController.js"></script>
+      <script type="text/javascript" src="lib/Obj3D.js"></script>
 
- 
+      <script type="text/javascript" src="resources/subdiv.js"></script>
+    <script type="text/javascript" src="resources/mesh_utils.js"></script>
+    <script type="text/javascript" src="resources/glm_light.js"></script>
+    <script type="text/javascript" src="resources/webgl-utils.js"></script>
+    <script type="text/javascript" src="resources/m4.js"></script>
+      
    </head>
    
     <body>
@@ -31,7 +37,9 @@
             gp.height=gp.clientHeight; 
         }       
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
-        var GamePanel = new WebGLController(document.getElementById("gamePanel"));
+        var objs=[];
+        objs.push(new Obj3D("./3D/gt86/Gt86_5000poly_closed.obj"));
+        var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
         dinamicResize();
         window.addEventListener("resize",dinamicResize);
     </script>
@@ -41,5 +49,7 @@
         window.renderGL= GamePanel.render;
         ControlPanel.requestAnimationEnabled=true;
         ControlPanel.render();
+        GamePanel.requestAnimationEnabled=true;
+        GamePanel.render();
     </script>
 </html>
