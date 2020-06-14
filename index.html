@@ -7,16 +7,6 @@
       <link rel="stylesheet" type="text/css" href="css/style.css">
       <title>WebGLMiniArcade</title> 
 
-      <script type="text/javascript" src="lib/utility.js"></script>
-      <script type="text/javascript" src="lib/Panel2D.js"></script>
-      <script type="text/javascript" src="lib/WebGLController.js"></script>
-      <script type="text/javascript" src="lib/Obj3D.js"></script>
-
-      <script type="text/javascript" src="resources/subdiv.js"></script>
-    <script type="text/javascript" src="resources/mesh_utils.js"></script>
-    <script type="text/javascript" src="resources/glm_light.js"></script>
-    <script type="text/javascript" src="resources/webgl-utils.js"></script>
-    <script type="text/javascript" src="resources/m4.js"></script>
       
    </head>
    
@@ -25,7 +15,46 @@
             <canvas id="gamePanel"></canvas>
             <canvas id="controlPanel"></canvas>
         </div>       
+        <script id="vertex-shader" type="x-shader/x-vertex">
+            attribute  vec3 vPosition;
+            attribute  vec3 vColor;
+            varying vec4 fColor;
+            
+            uniform mat4 modelView;
+            uniform mat4 projection;
+            
+            void main() 
+            {
+                gl_Position = projection*modelView*vec4(vPosition, 1.0);
+                fColor =vec4(vColor, 1.0);
+            } 
+            </script>
+            
+            <script id="fragment-shader" type="x-shader/x-fragment">
+            precision mediump float;            
+            varying vec4 fColor;            
+            void
+            main()
+            {
+                gl_FragColor = fColor;
+            }
+            </script>
     </body>
+
+
+
+
+    
+    <script type="text/javascript" src="lib/utility.js"></script>
+    <script type="text/javascript" src="lib/Panel2D.js"></script>
+    <script type="text/javascript" src="lib/WebGLController.js"></script>
+    <script type="text/javascript" src="lib/Obj3D.js"></script>
+
+    <script type="text/javascript" src="resources/subdiv.js"></script>
+  <script type="text/javascript" src="resources/mesh_utils.js"></script>
+  <script type="text/javascript" src="resources/webgl-utils.js"></script>
+  <script type="text/javascript" src="resources/m4.js"></script>      
+  <script  type="text/javascript" src="resources/glm_light.js"></script>
 
     <script type="text/javascript">
         function dinamicResize(){
@@ -38,7 +67,9 @@
         }       
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
-        objs.push(new Obj3D("./3D/gt86/Gt86_5000poly_closed.obj"));
+        //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj');
+        var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj');
+        objs.push(car);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
         dinamicResize();
         window.addEventListener("resize",dinamicResize);
@@ -47,9 +78,9 @@
         //PER FACILITARE IL DEBUG
         window.render2D= ControlPanel.render;            
         window.renderGL= GamePanel.render;
-        ControlPanel.requestAnimationEnabled=true;
         ControlPanel.render();
-        GamePanel.requestAnimationEnabled=true;
-        GamePanel.render();
+        StartWhenReady(objs,function(){GamePanel.render();});
     </script>
+
+    
 </html>
