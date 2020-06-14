@@ -56,6 +56,8 @@
   <script type="text/javascript" src="resources/m4.js"></script>      
   <script  type="text/javascript" src="resources/glm_light.js"></script>
 
+  <script type="text/javascript" src="webgl-debug.js"></script>
+
     <script type="text/javascript">
         function dinamicResize(){
             var cp = document.getElementById("controlPanel");
@@ -67,10 +69,14 @@
         }       
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
-        //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj');
-        var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj');
+        var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj');
+        var pista =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
+        var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
         objs.push(car);
+        objs.push(pista);
+        //objs.push(car);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
+        GamePanel.requestAnimationEnabled=true;
         dinamicResize();
         window.addEventListener("resize",dinamicResize);
     </script>
@@ -78,6 +84,31 @@
         //PER FACILITARE IL DEBUG
         window.render2D= ControlPanel.render;            
         window.renderGL= GamePanel.render;
+        window.showParam=function(){
+            console.log("------------------GamePanel.param----");
+            console.log("near",GamePanel.near);
+            console.log("far",GamePanel.far);
+            console.log("(??)radius",GamePanel.radius);
+            console.log("(angolo y) theta°",radToDeg(GamePanel.theta));
+            console.log("(angolo x) phi°",radToDeg(GamePanel.phi));
+            console.log("(??)dr",GamePanel.dr);
+            console.log("(asse z) fov",GamePanel.fov);
+            console.log("------------------GamePanel.param----");
+        }
+        window.setParam=function(name,value,convertDegToRad=false,stamp=true){
+            if(convertDegToRad){
+                GamePanel[name]=degToRad(value);
+            }else{
+                GamePanel[name]=value;
+            }           
+            if(stamp){
+                window.showParam();
+            }
+        }
+        window.setParam("phi",0.001,true);
+        window.setParam("theta",0.001,true);
+        window.setParam("far",2000);
+        window.setParam("fov",2000);
         ControlPanel.render();
         StartWhenReady(objs,function(){GamePanel.render();});
     </script>
