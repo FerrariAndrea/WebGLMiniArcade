@@ -22,31 +22,45 @@
             varying vec4 fColor;
             
             uniform mat4 Mmatrix;
-            uniform mat4 modelView;
-            uniform mat4 projection;
+            //uniform mat4 modelView;
+            //uniform mat4 projection;
+            uniform mat4 u_worldViewProjection;
+
             
             //luce
             uniform mat4 u_world;
             attribute vec3 a_normal;
             uniform vec3 u_lightWorldPosition;
+            uniform vec3 u_viewWorldPosition;
             varying vec3 v_normal;
             varying vec3 v_surfaceToLight;
             uniform mat4 u_worldInverseTranspose;
+            varying vec3 v_surfaceToView;
 
+            //textur
+            //attribute vec2 a_texcoord;
+            //uniform mat4 u_textureMatrix;
+            //varying vec2 v_texcoord;
+            //varying vec4 v_projectedTexcoord;
+
+            //uniform mat4 u_view; //-->Mmatrix
 
             void main() 
             {
-                gl_Position = projection*modelView*Mmatrix*vec4(vPosition, 1.0);
+                gl_Position = u_worldViewProjection*Mmatrix*vec4(vPosition, 1.0);
                 fColor =vec4(vColor, 1.0);
 
                 //luce
                 // orient the normals and pass to the fragment shader
-                v_normal = mat3(u_world) * a_normal;
+                v_normal = mat3(u_worldInverseTranspose) * a_normal;
                 // compute the world position of the surfoace
                 vec3 surfaceWorldPosition = (u_world * vec4(vPosition, 1.0)).xyz;
                 // compute the vector of the surface to the light
                 // and pass it to the fragment shader
                 v_surfaceToLight = u_lightWorldPosition - surfaceWorldPosition;
+                // compute the vector of the surface to the view/camera
+                // and pass it to the fragment shader
+                v_surfaceToView = u_viewWorldPosition - surfaceWorldPosition;
             } 
             </script>
             
@@ -58,7 +72,9 @@
             //luce
             // Passed in from the vertex shader.
             varying vec3 v_normal;
-            varying vec3 v_surfaceToLight;
+            varying vec3 v_surfaceToLight;            
+            varying vec3 v_surfaceToView;
+            uniform float u_shininess;
 
             void
             main()
@@ -69,14 +85,23 @@
                 vec3 normal = normalize(v_normal);
 
                 vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
+                vec3 surfaceToViewDirection = normalize(v_surfaceToView);
+                vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
 
                 float light = dot(normal, surfaceToLightDirection);
+                float specular = 0.0;
+                if (light > 0.0) {
+                  specular = pow(dot(normal, halfVector), u_shininess);
+                }
 
                 gl_FragColor = fColor;
 
                 // Lets multiply just the color portion (not the alpha)
                 // by the light
                 gl_FragColor.rgb *= light;
+
+                // Just add in the specular
+                gl_FragColor.rgb += specular;
             }
             </script>
     </body>
@@ -110,11 +135,12 @@
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
         var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj');
-        // var pista =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
-        // var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
-        objs.push(car);
+        var pista =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
+        var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
+        
+        objs.push(car);   
         //objs.push(pista);
-        //objs.push(car);
+        //objs.push(cubo);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
         GamePanel.requestAnimationEnabled=true;
         dinamicResize();
