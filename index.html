@@ -15,17 +15,19 @@
             <canvas id="gamePanel"></canvas>
             <canvas id="controlPanel"></canvas>
         </div>       
+      
         <script id="vertex-shader" type="x-shader/x-vertex">
             attribute  vec3 vPosition;
             attribute  vec3 vColor;
             varying vec4 fColor;
             
+            uniform mat4 Mmatrix;
             uniform mat4 modelView;
             uniform mat4 projection;
             
             void main() 
             {
-                gl_Position = projection*modelView*vec4(vPosition, 1.0);
+                gl_Position = projection*modelView*Mmatrix*vec4(vPosition, 1.0);
                 fColor =vec4(vColor, 1.0);
             } 
             </script>
@@ -73,7 +75,7 @@
         var pista =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
         var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
         objs.push(car);
-        objs.push(pista);
+        //objs.push(pista);
         //objs.push(car);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
         GamePanel.requestAnimationEnabled=true;
@@ -105,7 +107,10 @@
                 window.showParam();
             }
         }
-        window.setParam("phi",0.001,true);
+        window.ta=function(x,y,z){
+            car.translate(x,y,z);
+        }
+        window.setParam("phi",45,true);
         window.setParam("theta",0.001,true);
         window.setParam("far",2000);
         window.setParam("fov",2000);
