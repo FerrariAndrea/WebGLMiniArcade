@@ -690,6 +690,7 @@ Model.prototype.TranslateScale = function(scale, cx, cy, cz)
 		  model.vcolors[3 * i + 1]=1.0;
 		  model.vcolors[3 * i + 2]=1.0;
 	  }
+	  mesh.normals=normals; //MIA MODIFICA SULLE LIBRERIE DEL PROF
 	  return mesh;
 	}
 
@@ -748,7 +749,6 @@ Model.prototype.TranslateScale = function(scale, cx, cy, cz)
 	    
 	    /* rewind to beginning of file and read in the data this pass */
 	    //rewind(file);
-	    
 	    mesh = SecondPass(model, data, mesh);
 	    
 	    /* close the file */

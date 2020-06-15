@@ -25,20 +25,58 @@
             uniform mat4 modelView;
             uniform mat4 projection;
             
+            //luce
+            uniform mat4 u_world;
+            attribute vec3 a_normal;
+            uniform vec3 u_lightWorldPosition;
+            varying vec3 v_normal;
+            varying vec3 v_surfaceToLight;
+            uniform mat4 u_worldInverseTranspose;
+
+
             void main() 
             {
                 gl_Position = projection*modelView*Mmatrix*vec4(vPosition, 1.0);
                 fColor =vec4(vColor, 1.0);
+
+                //luce
+                // orient the normals and pass to the fragment shader
+                v_normal = mat3(u_world) * a_normal;
+                // compute the world position of the surfoace
+                vec3 surfaceWorldPosition = (u_world * vec4(vPosition, 1.0)).xyz;
+                // compute the vector of the surface to the light
+                // and pass it to the fragment shader
+                v_surfaceToLight = u_lightWorldPosition - surfaceWorldPosition;
             } 
             </script>
             
             <script id="fragment-shader" type="x-shader/x-fragment">
             precision mediump float;            
-            varying vec4 fColor;            
+            varying vec4 fColor;   
+            
+            
+            //luce
+            // Passed in from the vertex shader.
+            varying vec3 v_normal;
+            varying vec3 v_surfaceToLight;
+
             void
             main()
             {
+                // because v_normal is a varying it's interpolated
+                // so it will not be a unit vector. Normalizing it
+                // will make it a unit vector again
+                vec3 normal = normalize(v_normal);
+
+                vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
+
+                float light = dot(normal, surfaceToLightDirection);
+
                 gl_FragColor = fColor;
+
+                // Lets multiply just the color portion (not the alpha)
+                // by the light
+                gl_FragColor.rgb *= light;
             }
             </script>
     </body>
@@ -72,8 +110,8 @@
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
         var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj');
-        var pista =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
-        var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
+        // var pista =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
+        // var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
         objs.push(car);
         //objs.push(pista);
         //objs.push(car);
