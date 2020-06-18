@@ -3,6 +3,7 @@ studio oggetti 3D e loro trasformazioni
 studio della camera di vista
 studio dei colori
 studio della luce globale
+
 Sprint2)
 studio oggetti 3D esterni, caricamento da file
 studio ombre
@@ -16,3 +17,12 @@ estenzione della libreria{
 glm-light per poter catturare le normali alle superfici
 693 mesh.model=model; //MODIFICA SULLE LIBRERIE DEL PROF
 }
+
+Sprint3)
+fix delle normali lette dal file obj
+
+Sprint4)
+fix textcord per le texture
+
+Sprint5)
+ruote
