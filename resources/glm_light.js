@@ -406,7 +406,7 @@ Model.prototype.TranslateScale = function(scale, cx, cy, cz)
 		this.normals[3 * i + 2] = normals[3 * i + 2];
 	    }
 	    //free(normals);
-	    normals = null;
+	    //normals = null;
 	}
 
 	const MAXVAL = 40;
@@ -690,7 +690,7 @@ Model.prototype.TranslateScale = function(scale, cx, cy, cz)
 		  model.vcolors[3 * i + 1]=1.0;
 		  model.vcolors[3 * i + 2]=1.0;
 	  }
-	  mesh.normals=normals; //MIA MODIFICA SULLE LIBRERIE DEL PROF
+	  mesh.model=model; //MODIFICA SULLE LIBRERIE DEL PROF
 	  return mesh;
 	}
 

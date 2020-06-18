@@ -144,7 +144,8 @@
             float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;
             float shadowLight = (inRange && projectedDepth <= currentDepth) ? 0.0 : 1.0;
 
-            vec4 texColor = texture2D(u_texture, v_texcoord) * u_colorMult;
+            //vec4 texColor = texture2D(u_texture, v_texcoord) * u_colorMult;
+            vec4 texColor =  u_colorMult;
             gl_FragColor = vec4(
                 texColor.rgb * light * shadowLight +
                 specular * shadowLight,
@@ -176,72 +177,7 @@
                 }
                 </script>
         <!-- WebGLControllerV2 -----FINE-->
-        <!-- WebGLController -----INIZIO-->
-        <script id="vertex-shader" type="x-shader/x-vertex">
-            attribute  vec3 vPosition;
-            attribute  vec3 vColor;
-            varying vec4 fColor;
-            
-            uniform mat4 Mmatrix;
-            //uniform mat4 modelView;
-            //uniform mat4 projection;
-            uniform mat4 u_worldViewProjection;
-
-            
-            //luce
-            uniform mat4 u_world;
-            attribute vec3 a_normal;
-            uniform vec3 u_lightWorldPosition;
-            varying vec3 v_normal;
-            varying vec3 v_surfaceToLight;
-            uniform mat4 u_worldInverseTranspose;
-            
-
-            void main() 
-            {
-                gl_Position = u_worldViewProjection*Mmatrix*vec4(vPosition, 1.0);
-                fColor =vec4(vColor, 1.0);
-
-                //luce
-                // orient the normals and pass to the fragment shader
-                v_normal = mat3(u_world) * a_normal;
-                // compute the world position of the surfoace
-                vec3 surfaceWorldPosition = (u_world * vec4(vPosition, 1.0)).xyz;
-                // compute the vector of the surface to the light
-                // and pass it to the fragment shader
-                v_surfaceToLight = u_lightWorldPosition - surfaceWorldPosition;
-            } 
-        </script>            
-        <script id="fragment-shader" type="x-shader/x-fragment">
-        precision mediump float;            
-        varying vec4 fColor;   
-        
-        
-        //luce
-        // Passed in from the vertex shader.
-        varying vec3 v_normal;
-        varying vec3 v_surfaceToLight;
-
-        void
-        main()
-        {
-            // because v_normal is a varying it's interpolated
-            // so it will not be a unit vector. Normalizing it
-            // will make it a unit vector again
-            vec3 normal = normalize(v_normal);
-
-            vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
-
-            float light = dot(normal, surfaceToLightDirection);
-
-            gl_FragColor = fColor;
-
-            // Lets multiply just the color portion (not the alpha)
-            // by the light
-            gl_FragColor.rgb *= light;
-        }
-        </script>
-        <!-- WebGLController -----FINE-->
+   
     </body>
 
 
@@ -259,7 +195,7 @@
   <script type="text/javascript" src="resources/m4.js"></script>      
   <script  type="text/javascript" src="resources/glm_light.js"></script>
 
-  <script type="text/javascript" src="primitives.js"></script>
+  <script type="text/javascript" src="resources/primitives.js"></script>
   <script type="text/javascript" src="webgl-debug.js"></script>
 
     <script type="text/javascript">
@@ -273,16 +209,18 @@
         }       
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
-        // var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj');
-        // var pista =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
+        //Gt86_5000poly_closed
+        var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/untitled.obj',false,'http://11.0.0.15/cg/Esame/3D/gt86/uovo_Colore.bmp');
+        // var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/c_t.obj');
+        //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
         // var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
-        var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
-        car.translate(5,5,5);
+        //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/m.obj',true);
+        //car.translate(5,5,5);
         objs.push(car);   
         //objs.push(pista);
         //objs.push(cubo);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
-        //GamePanel.requestAnimationEnabled=true;
+        GamePanel.requestAnimationEnabled=true;
         dinamicResize();
         window.addEventListener("resize",dinamicResize);
     </script>
@@ -314,12 +252,16 @@
         window.ta=function(x,y,z){
             car.translate(x,y,z);
         }
+        window.r=function(g,d){
+            car.rotate(g,d);
+        }
         // window.setParam("phi",45,true);
         // window.setParam("theta",0.001,true);
         // window.setParam("far",2000);
         // window.setParam("fov",2000);
+        car.translate(1,0,1);
         ControlPanel.render();
-        StartWhenReady(objs,function(){GamePanel.render();});
+        StartWhenReady(objs,function(){GamePanel.init();GamePanel.render();});
     </script>
 
     

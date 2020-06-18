@@ -105,7 +105,7 @@ class WebGLController{
  
                 // var modelView = gl.getUniformLocation( program, "modelView" ); //DEPRECATO
                 // var projection = gl.getUniformLocation( program, "projection" ); //DEPRECATO
-                var worldViewProjectionLocation = gl.getUniformLocation(program, "u_worldViewProjection");
+                //var worldViewProjectionLocation = gl.getUniformLocation(program, "u_worldViewProjection");
                 
                 var projectionMatrix = m4.perspective(degToRad(this.fov), aspect, this.near, this.far);
                 var eye = [
@@ -126,6 +126,21 @@ class WebGLController{
     
                 
                 var mMatrix = gl.getUniformLocation(program, "Mmatrix");
+                
+                var lightAmbient =  [0.2, 0.2, 0.2, 1.0 ];
+                var lightDiffuse =  [1.0, 1.0, 1.0, 1.0 ];
+                var lightSpecular = [1.0, 1.0, 1.0, 1.0 ];
+
+                var materialAmbient = [1.0, 0.0, 1.0, 1.0];
+                var materialDiffuse = [1.0, 0.8, 0.0, 1.0];
+                var materialSpecular = [1.0, 0.8, 0.0, 1.0];
+                var ambientProduct = m4.mvec4(lightAmbient, materialAmbient);
+                var diffuseProduct = m4.mvec4(lightDiffuse, materialDiffuse);
+                var specularProduct = m4.mvec4(lightSpecular, materialSpecular);
+                gl.uniform4fv(gl.getUniformLocation(program, "ambientProduct" ), ambientProduct);
+                gl.uniform4fv(gl.getUniformLocation(program, "diffuseProduct" ), diffuseProduct );
+                gl.uniform4fv(gl.getUniformLocation(program, "specularProduct"), specularProduct );	
+
                 var lightWorldPositionLocation = gl.getUniformLocation(program, "u_lightWorldPosition");//----------------TEST
                 var viewWorldPositionLocation = gl.getUniformLocation(program, "u_viewWorldPosition");
                 // set the camera/view position
@@ -140,12 +155,14 @@ class WebGLController{
                 
                 var fRotationRadians = 0;
                 var worldMatrix = m4.yRotation(fRotationRadians);                
-                var worldViewProjectionMatrix = m4.multiply(viewProjectionMatrix, worldMatrix);
+               // var worldViewProjectionMatrix = m4.multiply(viewProjectionMatrix, worldMatrix);
                 var worldInverseMatrix = m4.inverse(worldMatrix);
             
                 var worldInverseTransposeMatrix = m4.transpose(worldInverseMatrix);
                 var worldInverseTransposeLocation = gl.getUniformLocation(program, "u_worldInverseTranspose");
-                gl.uniformMatrix4fv(worldViewProjectionLocation, false, worldViewProjectionMatrix);        
+                //gl.uniformMatrix4fv(worldViewProjectionLocation, false, worldViewProjectionMatrix);        
+                gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),false, viewProjectionMatrix);
+                gl.uniformMatrix4fv( gl.getUniformLocation(program,"modelViewMatrix"), false, viewMatrix );
                 gl.uniformMatrix4fv(worldInverseTransposeLocation, false, worldInverseTransposeMatrix);
                 gl.uniformMatrix4fv(worldLocation, false, worldMatrix);
 

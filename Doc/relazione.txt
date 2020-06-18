@@ -1,0 +1,18 @@
+Sprint1)
+studio oggetti 3D e loro trasformazioni
+studio della camera di vista
+studio dei colori
+studio della luce globale
+Sprint2)
+studio oggetti 3D esterni, caricamento da file
+studio ombre
+creazione dei file (si appoggiano su webgl-utils, glm-light, m4, primitives, subdiv, mesh_utils){
+Obj3D
+WebGLController
+utility
+Panel2D
+}
+estenzione della libreria{
+glm-light per poter catturare le normali alle superfici
+693 mesh.model=model; //MODIFICA SULLE LIBRERIE DEL PROF
+}
