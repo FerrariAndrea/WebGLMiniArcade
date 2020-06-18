@@ -3,6 +3,7 @@
 newmtl PBR
 Ka 1 1 1
 Kd 1 1 1
+map_Kd C:\Users\TSG\Desktop\PBR_Colore.bmp
 Ks 0.80000001192093 0.80000001192093 0.80000001192093
 Ns 70
 illum 7

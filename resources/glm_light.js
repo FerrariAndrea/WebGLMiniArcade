@@ -748,7 +748,7 @@ Model.prototype.TranslateScale = function(scale, cx, cy, cz)
 	    }
 	    
 	    /* rewind to beginning of file and read in the data this pass */
-	    //rewind(file);
+	   // rewind(file);
 	    mesh = SecondPass(model, data, mesh);
 	    
 	    /* close the file */

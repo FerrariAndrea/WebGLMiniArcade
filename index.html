@@ -144,8 +144,8 @@
             float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;
             float shadowLight = (inRange && projectedDepth <= currentDepth) ? 0.0 : 1.0;
 
-            //vec4 texColor = texture2D(u_texture, v_texcoord) * u_colorMult;
-            vec4 texColor =  u_colorMult;
+            vec4 texColor = texture2D(u_texture, v_texcoord) * u_colorMult;
+            //vec4 texColor =  u_colorMult;
             gl_FragColor = vec4(
                 texColor.rgb * light * shadowLight +
                 specular * shadowLight,
@@ -210,7 +210,7 @@
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
         //Gt86_5000poly_closed
-        var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/untitled.obj',false,'http://11.0.0.15/cg/Esame/3D/gt86/uovo_Colore.bmp');
+        var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://11.0.0.15/cg/Esame/3D/gt86/c.bmp');
         // var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/c_t.obj');
         //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
         // var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
