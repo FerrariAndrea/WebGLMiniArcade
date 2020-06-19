@@ -231,6 +231,7 @@
         //objs.push(cubo);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
         GamePanel.requestAnimationEnabled=true;
+        ControlPanel.requestAnimationEnabled=true;
         dinamicResize();
         window.addEventListener("resize",dinamicResize);
     </script>
@@ -268,9 +269,12 @@
         // window.setParam("phi",45,true);
         // window.setParam("theta",0.001,true);
         // window.setParam("far",2000);
-        // window.setParam("fov",2000);
-        ControlPanel.render();
-        StartWhenReady(objs,function(){GamePanel.init();console.log("ok");GamePanel.render();});
+        // window.setParam("fov",2000);        
+        GamePanel.fpsCounterFunction=function rsetFtpcounter(val){
+            ControlPanel.fpscounter=Math.round(val);
+        }
+        ControlPanel.update();
+        StartWhenReady(objs,function(){GamePanel.init();console.log("ok");GamePanel.update();});
     </script>
 
     

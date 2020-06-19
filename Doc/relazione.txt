@@ -36,3 +36,5 @@ In quesot modo posso anche gestire meglio eventuali "conglomerati" di oggetti, c
 
 //-------------
 aggiunto "texture_enable" allo shader e alle Uniform degli oggetti per gestire il caso in cui un obj sia sprovvisto della texture
+
+//contatore fps
