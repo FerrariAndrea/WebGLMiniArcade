@@ -55,7 +55,6 @@
             
          
             uniform vec3 u_viewWorldPosition;
-
             uniform vec3 u_lightWorldPosition;
 
 
@@ -71,7 +70,11 @@
             varying vec3 v_surfaceToLight;
             varying vec3 v_surfaceToView;
 
-   
+
+            //-------------------------------------------------------------------LUCI AUTO
+            uniform vec3 u_lightWorldPosition_AD;
+            varying vec3 v_surfaceToLight_AD;
+            //----------------------------------------------------------------------------
 
             void main() {
             // Multiply the position by the matrix.
@@ -98,6 +101,12 @@
             // and pass it to the fragment shader
             v_surfaceToView = u_viewWorldPosition - surfaceWorldPosition;
 
+            //-------------------------------------------------------------------LUCI AUTO
+            // compute the vector of the surface to the light
+            // and pass it to the fragment shader
+            v_surfaceToLight_AD = u_lightWorldPosition_AD - surfaceWorldPosition;
+            //----------------------------------------------------------------------------
+
             }
             </script>
             <!-- fragment shader -->
@@ -121,40 +130,37 @@
 
             uniform float blur_shadow;
 
-
-
-
-
             uniform float u_innerLimit;          // in dot space
             uniform float u_outerLimit;          // in dot space
             //
             uniform float illuminazione;
 
-            //aggiunto da me per poter disegnare un oggetto senza texture
+            //aggiunto per poter disegnare un oggetto senza texture
             uniform float texture_enable; 
-
+            //aggiunto per poter calcolare un numero randomico 
             float rand(vec2 co){
                 return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
             }
 
+            //-------------------------------------------------------------------LUCI AUTO
+            varying vec3 v_surfaceToLight_AD;        
+            //uniform vec4 u_color_A;
+            uniform float u_shininess_A;
+            uniform vec4 u_lightColor_A;
+            uniform vec3 u_specularColor_A;            
+            uniform vec3 u_lightDirection_A; 
+            uniform float u_outerLimit_A;          
+            uniform float u_innerLimit_A;    
+            
+            //----------------------------------------------------------------------------
 
             void main() {
-            // because v_normal is a varying it's interpolated
-            // so it will not be a unit vector. Normalizing it
-            // will make it a unit vector again
-            vec3 normal = normalize(v_normal);
+                // because v_normal is a varying it's interpolated
+                // so it will not be a unit vector. Normalizing it
+                // will make it a unit vector again
+                vec3 normal = normalize(v_normal);
 
-            vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
-
-            if(blur_shadow > 0.0){
-                
-                //Poisson Sampling
-                vec2 poissonDisk_0 = vec2( -0.94201624, -0.39906216 );
-                vec2 poissonDisk_1 = vec2( 0.94558609, -0.76890725 );
-                vec2 poissonDisk_2 =  vec2( -0.094184101, -0.92938870 );
-                vec2 poissonDisk_3 = vec2( 0.34495938, 0.29387760 );
-                
-           
+                vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
 
                 vec3 surfaceToViewDirection = normalize(v_surfaceToView);
                 vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
@@ -179,87 +185,76 @@
                 float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;
                 float shadowLight =(inRange && projectedDepth <= currentDepth) ? 0.1 : illuminazione;
 
-                //-------------poisson blur
-                if(shadowLight > 0.0){
-                    for (int i=0;i<16;i++){
-                        float index = rand(gl_FragCoord.xy);
-                        float temp=0.0;
-                        if(index>0.2){
-                            temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_0/blur_shadow ).r - currentDepth;                   
-                        }else if(index>0.4){
-                            temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_1/blur_shadow ).r - currentDepth;
-                        }else if(index>0.6){
-                            temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_2/blur_shadow ).r - currentDepth;
-                        }else{
-                            temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_3/blur_shadow ).r - currentDepth;
-                        }
-                        if(temp<0.0){
-                            shadowLight +=  temp  ;
+                if(blur_shadow > 0.0){
+                    //blur manuale delle ombre
+                    //if(shadowLight>0.0){
+                    //    //se il punto attuale non è un pezzo dell'ombra, aumento comunque la sua ombra in base alla distanza da altri px in ombra
+                    //    float intensita = 0.0;
+                    //    for(float x=0.0 ; x<0.001; x += 0.01){
+                    //        for(float y=0.0; y<0.001; y += 0.01){
+                    //            if((projectedTexcoord.x + x) < 1.0 && (projectedTexcoord.y + y) < 1.0){                            
+                    //                vec4 temp_coord=vec4(projectedTexcoord.x+x,projectedTexcoord.y+y,projectedTexcoord.z,1.0);
+                    //                float projectedDepth_2=texture2D(u_projectedTexture, temp_coord.xy).r;
+                    //                intensita += (inRange && projectedDepth_2 <= currentDepth) ? 1.0 : 0.001;
+                    //            }
+                    //        }
+                    //    }
+                    //    shadowLight=shadowLight-intensita;
+                    //}
+                    //Poisson Sampling
+                    vec2 poissonDisk_0 = vec2( -0.94201624, -0.39906216 );
+                    vec2 poissonDisk_1 = vec2( 0.94558609, -0.76890725 );
+                    vec2 poissonDisk_2 =  vec2( -0.094184101, -0.92938870 );
+                    vec2 poissonDisk_3 = vec2( 0.34495938, 0.29387760 );
+                    //-------------poisson blur
+                    if(shadowLight > 0.0){
+                        for (int i=0;i<16;i++){
+                            float index = rand(gl_FragCoord.xy);
+                            float temp=0.0;
+                            if(index>0.2){
+                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_0/blur_shadow ).r - currentDepth;                   
+                            }else if(index>0.4){
+                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_1/blur_shadow ).r - currentDepth;
+                            }else if(index>0.6){
+                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_2/blur_shadow ).r - currentDepth;
+                            }else{
+                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_3/blur_shadow ).r - currentDepth;
+                            }
+                            if(temp<0.0){
+                                shadowLight +=  temp  ;
+                            }
                         }
                     }
-                }
                 
-            
+                }
          
-             
-      
                 //aggiunto da me per poter disegnare un oggetto senza texture
-                vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);
-    
+                vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);    
                 //vec4 texColor =  u_colorMult;
                 gl_FragColor = vec4(
                     texColor.rgb * light * shadowLight +
                     specular * shadowLight,
                     texColor.a);
 
-            }else{
-                vec3 surfaceToViewDirection = normalize(v_surfaceToView);
-                vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
-    
-                float dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection);
-                                            
-                float limitRange = u_innerLimit - u_outerLimit;
-                float inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.0, 1.0);
-                float light = inLight * dot(normal, surfaceToLightDirection);
-                float specular = inLight * pow(dot(normal, halfVector), u_shininess);
-    
-                vec3 projectedTexcoord = v_projectedTexcoord.xyz / v_projectedTexcoord.w;
-                float currentDepth = projectedTexcoord.z + u_bias;
-    
-                bool inRange =
-                    projectedTexcoord.x >= 0.0 &&
-                    projectedTexcoord.x <= 1.0 &&
-                    projectedTexcoord.y >= 0.0 &&
-                    projectedTexcoord.y <= 1.0;
-    
-                // the 'r' channel has the depth values
-                float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;
-                float shadowLight = (inRange && projectedDepth <= currentDepth) ? 0.0 : illuminazione;
-                //blur manuale delle ombre
-                //if(shadowLight>0.0){
-                //    //se il punto attuale non è un pezzo dell'ombra, aumento comunque la sua ombra in base alla distanza da altri px in ombra
-                //    float intensita = 0.0;
-                //    for(float x=0.0 ; x<0.001; x += 0.01){
-                //        for(float y=0.0; y<0.001; y += 0.01){
-                //            if((projectedTexcoord.x + x) < 1.0 && (projectedTexcoord.y + y) < 1.0){                            
-                //                vec4 temp_coord=vec4(projectedTexcoord.x+x,projectedTexcoord.y+y,projectedTexcoord.z,1.0);
-                //                float projectedDepth_2=texture2D(u_projectedTexture, temp_coord.xy).r;
-                //                intensita += (inRange && projectedDepth_2 <= currentDepth) ? 1.0 : 0.001;
-                //            }
-                //        }
-                //    }
-                //    shadowLight=shadowLight-intensita;
-                //}
-    
-                //aggiunto da me per poter disegnare un oggetto senza texture
-                vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);
-    
-                //vec4 texColor =  u_colorMult;
-                gl_FragColor = vec4(
-                    texColor.rgb * light * shadowLight +
-                    specular * shadowLight,
-                    texColor.a);
+
+                
+                //-------------------------------------------------------------------LUCI AUTO
+                vec3 surfaceToLightDirection_AD = normalize(v_surfaceToLight_AD);
+                halfVector = normalize(surfaceToLightDirection_AD + surfaceToViewDirection);
+                dotFromDirection = dot(surfaceToLightDirection_AD,-u_lightDirection_A);         
+                limitRange = u_innerLimit_A - u_outerLimit_A;       
+                inLight = clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
+                light = inLight * dot(normal, surfaceToLightDirection_AD);
+                specular = 0.0;
+                if (light > 0.0) {
+                    specular = pow(dot(normal, halfVector), u_shininess_A);                    
+                    gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);
                 }
+
+                //----------------------------------------------------------------------------
+           
+      
+    
             }
           
             </script>

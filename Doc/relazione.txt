@@ -64,4 +64,7 @@ una funzione che permetta di effettuare una sorta di blur sulle ombre, aumentado
             //    }
             //    shadowLight=shadowLight-intensita;
             //}
+Sprint7)
+aggiungere luci auto
+webgl-3d-lighting-point-color
             
