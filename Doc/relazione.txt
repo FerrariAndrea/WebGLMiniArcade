@@ -26,3 +26,11 @@ fix textcord per le texture
 
 Sprint5)
 ruote
+car
+(riscritto dal codice di car2.js ed cg_car2.html)
+rispetto alla logica attuale dei vari OBJ e di un gestore unico che attualmente fa le draw ottenendo i valori dagli obj
+ho dovuto ripensare il meccanismo spostando l'azione di draw direttamente all'interno dei singoli obj, dato che in alcuni casi
+devono eseguire delle operazioni sulla matrice mMatrix prima della loro draw, quindi il componente che gestisce le draw chiederà ai singoli obj
+di fare a loro volta la draw invece che chiederne i dati per poi eseguirla lui stesso.
+In quesot modo posso anche gestire meglio eventuali "conglomerati" di oggetti, come l'auto, che a sua volta può contenere obj e quindi scatenare una draw in cascata
+
