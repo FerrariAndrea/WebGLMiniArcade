@@ -41,6 +41,9 @@
             <canvas id="gamePanel"></canvas>
             <canvas id="controlPanel"></canvas>
         </div>       
+        <div id="loading">
+                <h1>CARICAMENTO IN CORSO...</h1>
+        </div>
 
         <!-- WebGLControllerV2 -----INIZIO-->
        <script  id="3d-vertex-shader" type="x-shader/x-vertex">
@@ -217,8 +220,9 @@
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
         //Gt86_5000poly_closed
-        var scocca =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://11.0.0.15/cg/Esame/3D/gt86/texture.bmp');
-        var ruota =new Obj3D('http://11.0.0.15/cg/Esame/3D/gt86/ruote/ruota.obj');
+        const localhost = document.location.host;
+        var scocca =new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/texture.bmp');
+        var ruota =new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj');
        
         var car = new Car(scocca,ruota);
         // var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/c_t.obj');
@@ -230,6 +234,7 @@
         //objs.push(pista);
         //objs.push(cubo);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
+        car.enableThouch(true, document.getElementById("gamePanel"));
         GamePanel.requestAnimationEnabled=true;
         ControlPanel.requestAnimationEnabled=true;
         dinamicResize();
@@ -274,7 +279,11 @@
             ControlPanel.fpscounter=Math.round(val);
         }
         ControlPanel.update();
-        StartWhenReady(objs,function(){GamePanel.init();console.log("ok");GamePanel.update();});
+        StartWhenReady(objs,function(){
+            GamePanel.init();
+            GamePanel.update();
+            document.getElementById("loading").style.display="none";
+        });
     </script>
 
     

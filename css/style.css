@@ -1,7 +1,7 @@
 #gamePanel{
     height: 100%;
     width: 80%;
-    background-color: red;
+    background-color: darkcyan;
 }
 #controlPanel{
     width: 20%;
@@ -19,3 +19,9 @@
     height: 100%;
     margin: 0px;
   }
+
+#loading{
+  position: absolute;
+  top: 0;
+  color:coral;
+}
