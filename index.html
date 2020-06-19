@@ -116,6 +116,7 @@
             uniform vec3 u_lightDirection;
             uniform float u_innerLimit;          // in dot space
             uniform float u_outerLimit;          // in dot space
+            uniform float illuminazione;
 
             //aggiunto da me per poter disegnare un oggetto senza texture
             uniform float texture_enable; 
@@ -130,8 +131,8 @@
             vec3 surfaceToViewDirection = normalize(v_surfaceToView);
             vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
 
-            float dotFromDirection = dot(surfaceToLightDirection,
-                                        -u_lightDirection);
+            float dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection);
+                                        
             float limitRange = u_innerLimit - u_outerLimit;
             float inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.0, 1.0);
             float light = inLight * dot(normal, surfaceToLightDirection);
@@ -148,7 +149,23 @@
 
             // the 'r' channel has the depth values
             float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;
-            float shadowLight = (inRange && projectedDepth <= currentDepth) ? 0.0 : 1.0;
+            float shadowLight = (inRange && projectedDepth <= currentDepth) ? 0.0 : illuminazione;
+
+            //blur manuale delle ombre
+            //if(shadowLight>0.0){
+            //    //se il punto attuale non è un pezzo dell'ombra, aumento comunque la sua ombra in base alla distanza da altri px in ombra
+            //    float intensita = 0.0;
+            //    for(float x=0.0 ; x<0.001; x += 0.01){
+            //        for(float y=0.0; y<0.001; y += 0.01){
+            //            if((projectedTexcoord.x + x) < 1.0 && (projectedTexcoord.y + y) < 1.0){                            
+            //                vec4 temp_coord=vec4(projectedTexcoord.x+x,projectedTexcoord.y+y,projectedTexcoord.z,1.0);
+            //                float projectedDepth_2=texture2D(u_projectedTexture, temp_coord.xy).r;
+            //                intensita += (inRange && projectedDepth_2 <= currentDepth) ? 1.0 : 0.001;
+            //            }
+            //        }
+            //    }
+            //    shadowLight=shadowLight-intensita;
+            //}
 
             //aggiunto da me per poter disegnare un oggetto senza texture
             vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);

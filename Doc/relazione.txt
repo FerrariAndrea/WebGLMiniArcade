@@ -38,3 +38,30 @@ In quesot modo posso anche gestire meglio eventuali "conglomerati" di oggetti, c
 aggiunto "texture_enable" allo shader e alle Uniform degli oggetti per gestire il caso in cui un obj sia sprovvisto della texture
 
 //contatore fps
+
+
+Sprint6)
+obre migliorate
+-----
+cercando di applicare un blur sulle obre, ho aggiunto anche un fattore di illuminazione
+"illuminazione" che in sostanza manipola il valore rgb applicato alle ombre, calando un obra generale su tutti i px della scena (omogenea)
+
+//--------primo tentativo
+una funzione che permetta di effettuare una sorta di blur sulle ombre, aumentado la luce ombra intorno ai punti di confine
+(l'effetto è solo quello di un ombra più grande, si raffina l'obra solo per punti lontai dalla fonte della luce):
+ //blur manuale delle ombre
+            //if(shadowLight>0.0){
+            //    //se il punto attuale non è un pezzo dell'ombra, aumento comunque la sua ombra in base alla distanza da altri px in ombra
+            //    float intensita = 0.0;
+            //    for(float x=0.0 ; x<0.001; x += 0.01){
+            //        for(float y=0.0; y<0.001; y += 0.01){
+            //            if((projectedTexcoord.x + x) < 1.0 && (projectedTexcoord.y + y) < 1.0){                            
+            //                vec4 temp_coord=vec4(projectedTexcoord.x+x,projectedTexcoord.y+y,projectedTexcoord.z,1.0);
+            //                float projectedDepth_2=texture2D(u_projectedTexture, temp_coord.xy).r;
+            //                intensita += (inRange && projectedDepth_2 <= currentDepth) ? 1.0 : 0.001;
+            //            }
+            //        }
+            //    }
+            //    shadowLight=shadowLight-intensita;
+            //}
+            
