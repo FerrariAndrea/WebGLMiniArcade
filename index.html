@@ -114,6 +114,9 @@
             uniform float u_innerLimit;          // in dot space
             uniform float u_outerLimit;          // in dot space
 
+            //aggiunto da me per poter disegnare un oggetto senza texture
+            uniform float texture_enable; 
+
             void main() {
             // because v_normal is a varying it's interpolated
             // so it will not be a unit vector. Normalizing it
@@ -144,7 +147,9 @@
             float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;
             float shadowLight = (inRange && projectedDepth <= currentDepth) ? 0.0 : 1.0;
 
-            vec4 texColor = texture2D(u_texture, v_texcoord) * u_colorMult;
+            //aggiunto da me per poter disegnare un oggetto senza texture
+            vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);
+
             //vec4 texColor =  u_colorMult;
             gl_FragColor = vec4(
                 texColor.rgb * light * shadowLight +

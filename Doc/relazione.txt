@@ -34,3 +34,5 @@ devono eseguire delle operazioni sulla matrice mMatrix prima della loro draw, qu
 di fare a loro volta la draw invece che chiederne i dati per poi eseguirla lui stesso.
 In quesot modo posso anche gestire meglio eventuali "conglomerati" di oggetti, come l'auto, che a sua volta può contenere obj e quindi scatenare una draw in cascata
 
+//-------------
+aggiunto "texture_enable" allo shader e alle Uniform degli oggetti per gestire il caso in cui un obj sia sprovvisto della texture
