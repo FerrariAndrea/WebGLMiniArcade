@@ -65,6 +65,8 @@ una funzione che permetta di effettuare una sorta di blur sulle ombre, aumentado
             //    shadowLight=shadowLight-intensita;
             //}
 Sprint7)
-aggiungere luci auto
+aggiungere luci auto (luce proiettata dai fari davanti)
 webgl-3d-lighting-point-color
-            
+(non sono riuscito in tempi ragionevi ad aggiungere le ombre cusate dalle luci davanti dell'auto)
+Sprint()
+aggiungere luci auto davanti e dietro come materiali luminescenti            

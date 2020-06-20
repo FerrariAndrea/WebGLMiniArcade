@@ -76,6 +76,11 @@
             varying vec3 v_surfaceToLight_AD;
             uniform vec3 u_lightWorldPosition_AS;
             varying vec3 v_surfaceToLight_AS;
+
+            uniform vec3 u_lightWorldPosition_AD_sup;
+            varying vec3 v_surfaceToLight_AD_sup;
+            uniform vec3 u_lightWorldPosition_AS_sup;
+            varying vec3 v_surfaceToLight_AS_sup;
             //----------------------------------------------------------------------------
 
             void main() {
@@ -110,6 +115,12 @@
             // compute the vector of the surface to the light
             // and pass it to the fragment shader
             v_surfaceToLight_AS = u_lightWorldPosition_AS - surfaceWorldPosition;
+            // compute the vector of the surface to the light
+            // and pass it to the fragment shader
+            v_surfaceToLight_AD_sup = u_lightWorldPosition_AD_sup - surfaceWorldPosition;
+            // compute the vector of the surface to the light
+            // and pass it to the fragment shader
+            v_surfaceToLight_AS_sup = u_lightWorldPosition_AS_sup - surfaceWorldPosition;
             //----------------------------------------------------------------------------
 
             }
@@ -158,6 +169,12 @@
             uniform vec3 u_lightDirection_AD; 
             uniform float u_outerLimit_A;          
             uniform float u_innerLimit_A;    
+            
+            //superfice faro davanti
+            varying vec3 v_surfaceToLight_AD_sup;
+            varying vec3 v_surfaceToLight_AS_sup;
+            uniform vec3 u_lightDirection_AD_sup;
+            uniform vec3 u_lightDirection_AS_sup;
             
             //----------------------------------------------------------------------------
 
@@ -244,36 +261,53 @@
                     texColor.a);
 
 
-                
-                //-------------------------------------------------------------------LUCE AUTO DESTRA
+        
+
+                //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
                 vec3 surfaceToLightDirection_AD = normalize(v_surfaceToLight_AD);
                 halfVector = normalize(surfaceToLightDirection_AD + surfaceToViewDirection);
                 dotFromDirection = dot(surfaceToLightDirection_AD,-u_lightDirection_AD);         
                 limitRange = (u_innerLimit_A - u_outerLimit_A);       
                 inLight = clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
                 light = inLight * dot(normal, surfaceToLightDirection_AD);
-                specular = 0.0;
-                vec4 ris_faro_destra = vec4(0.0, 0.0, 0.0, 0.0);
-                bool faro_destra_inLight=light > 0.0;
-                if (faro_destra_inLight) {
+                if (light > 0.0) {
                     specular = pow(dot(normal, halfVector), u_shininess_A);  
-                    ris_faro_destra = vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);   
+                    gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);   
                 }
-                //-------------------------------------------------------------------LUCE AUTO SINISTRA
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione terreno)
                 vec3 surfaceToLightDirection_AS = normalize(v_surfaceToLight_AS);
                 halfVector = normalize(surfaceToLightDirection_AS + surfaceToViewDirection);
                 dotFromDirection = dot(surfaceToLightDirection_AS,-u_lightDirection_AS);         
                 limitRange = (u_innerLimit_A - u_outerLimit_A);       
                 inLight = clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
                 light = inLight * dot(normal, surfaceToLightDirection_AS);
-                specular = 0.0;                
-                vec4 ris_faro_sinistra = vec4(0.0, 0.0, 0.0, 0.0);
-                bool faro_sinistra_inLight  =light > 0.0;
-                if (faro_sinistra_inLight) {
+                if (light > 0.0) {
                     specular = pow(dot(normal, halfVector), u_shininess_A);  
-                    ris_faro_sinistra = vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);
+                     gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);
                 }
-                gl_FragColor += ris_faro_destra + ris_faro_sinistra;
+                //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione faro stesso)
+                vec3 surfaceToLightDirection_AD_sup = normalize(v_surfaceToLight_AD_sup);
+                halfVector = normalize(surfaceToLightDirection_AD_sup + surfaceToViewDirection);
+                dotFromDirection = dot(surfaceToLightDirection_AD_sup,- u_lightDirection_AD_sup);         
+                limitRange = (0.9990 -  0.99144);       
+                inLight = clamp((dotFromDirection -  0.99144) / limitRange, 0.0, 1.0);
+                light = inLight * dot(normal, surfaceToLightDirection_AD_sup);
+                if (light > 0.0) {
+                    specular = pow(dot(normal, halfVector), u_shininess_A);  
+                    gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);   
+                }
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione faro stesso)
+                vec3 surfaceToLightDirection_AS_supp = normalize(v_surfaceToLight_AS_sup);
+                halfVector = normalize(surfaceToLightDirection_AS_supp + surfaceToViewDirection);
+                dotFromDirection = dot(surfaceToLightDirection_AS_supp,- u_lightDirection_AS_sup);         
+                limitRange = (0.9990 -  0.99144);       
+                inLight = clamp((dotFromDirection -  0.99144) / limitRange, 0.0, 1.0);
+                light = inLight * dot(normal, surfaceToLightDirection_AS_supp);
+                if (light > 0.0) {
+                    specular = pow(dot(normal, halfVector), u_shininess_A);  
+                     gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);
+                }
+
                 //----------------------------------------------------------------------------
            
       
@@ -342,10 +376,10 @@
         var objs=[];
         //Gt86_5000poly_closed
         const localhost = document.location.host;
-        var scocca =new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/texture.bmp');
-        var ruota =new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj');
-       
-        var car = new Car(scocca,ruota);
+        const objs_car = {};
+        objs_car.obj_car=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/texture.bmp');
+        objs_car.obj_wheel=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj')
+        var car = new Car(objs_car);
         // var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/c_t.obj');
         //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
         // var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
@@ -387,13 +421,9 @@
             }
         }
         window.ta=function(x,y,z){
-            car.posRel_faro_ad.x+=x;
-            car.posRel_faro_ad.y+=y;
-            car.posRel_faro_ad.z+=z;
-        }
-        window.ab=function(a,b){
-            car.a=a;
-            car.b=b;
+            car.fari_sup_dest[0]=x;
+            car.fari_sup_dest[1]=y;
+            car.fari_sup_dest[2]=z;
         }
         window.ebs=function(enable){
             GamePanel.blur_shadow=enable;
