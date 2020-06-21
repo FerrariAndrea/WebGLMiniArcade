@@ -81,6 +81,16 @@
             varying vec3 v_surfaceToLight_AD_sup;
             uniform vec3 u_lightWorldPosition_AS_sup;
             varying vec3 v_surfaceToLight_AS_sup;
+
+            //ombre
+            uniform mat4 u_textureMatrix_1;            
+            varying vec4 v_projectedTexcoord_1;            
+            uniform mat4 u_textureMatrix_2;            
+            varying vec4 v_projectedTexcoord_2;            
+            uniform mat4 u_textureMatrix_3;            
+            varying vec4 v_projectedTexcoord_3;            
+            uniform mat4 u_textureMatrix_4;            
+            varying vec4 v_projectedTexcoord_4;
             //----------------------------------------------------------------------------
 
             void main() {
@@ -121,6 +131,11 @@
             // compute the vector of the surface to the light
             // and pass it to the fragment shader
             v_surfaceToLight_AS_sup = u_lightWorldPosition_AS_sup - surfaceWorldPosition;
+            //---ombre
+            v_projectedTexcoord_1 = u_textureMatrix_1 * worldPosition;            
+            v_projectedTexcoord_2 = u_textureMatrix_2 * worldPosition;
+            v_projectedTexcoord_3 = u_textureMatrix_3 * worldPosition;
+            v_projectedTexcoord_4 = u_textureMatrix_4 * worldPosition;
             //----------------------------------------------------------------------------
 
             }
@@ -138,7 +153,7 @@
             varying vec3 v_surfaceToView;
             uniform vec4 u_colorMult;
             uniform sampler2D u_texture;
-            uniform sampler2D u_projectedTexture;
+            uniform sampler2D u_projectedTexture;        
             uniform float u_bias;
             uniform float u_shininess;
 
@@ -176,6 +191,16 @@
             uniform vec3 u_lightDirection_AD_sup;
             uniform vec3 u_lightDirection_AS_sup;
             
+
+            //ombre
+            uniform sampler2D u_projectedTexture_1;            
+            varying vec4 v_projectedTexcoord_1;            
+            uniform sampler2D u_projectedTexture_2;            
+            varying vec4 v_projectedTexcoord_2;            
+            uniform sampler2D u_projectedTexture_3;            
+            varying vec4 v_projectedTexcoord_3;            
+            uniform sampler2D u_projectedTexture_4;            
+            varying vec4 v_projectedTexcoord_4;    
             //----------------------------------------------------------------------------
 
             void main() {
@@ -187,8 +212,7 @@
                 vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
 
                 vec3 surfaceToViewDirection = normalize(v_surfaceToView);
-                vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);
-    
+                vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);  
                 float dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection);
                                             
                 float limitRange = u_innerLimit - u_outerLimit;
@@ -206,8 +230,99 @@
                     projectedTexcoord.y <= 1.0;
     
                 // the 'r' channel has the depth values
-                float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r;
-                float shadowLight =(inRange && projectedDepth <= currentDepth) ? 0.1 : illuminazione;
+                float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r ;
+                float shadowLight_0 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
+                float shadowLight=illuminazione-shadowLight_0;
+                float shadowLight_1 =1.0;
+                float shadowLight_2 =1.0;
+                float shadowLight_3 =1.0;
+                float shadowLight_4 =1.0;
+
+                limitRange = (u_innerLimit_A - u_outerLimit_A);     
+                if(blur_shadow<=0.0){
+                    //solo se il blur delle ombre non è attivo
+                    //ombre luci auto
+                    //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
+                    projectedTexcoord = v_projectedTexcoord_1.xyz / v_projectedTexcoord_1.w;
+                    inRange =
+                        projectedTexcoord.x >= 0.0 &&
+                        projectedTexcoord.x <= 1.0 &&
+                        projectedTexcoord.y >= 0.0 &&
+                        projectedTexcoord.y <= 1.0 && 
+                        projectedTexcoord.z >= 0.0 && 
+                        projectedTexcoord.z <= 1.0 
+                        ;                                     
+                    dotFromDirection = dot(normalize(v_surfaceToLight_AD),-u_lightDirection_AD);    
+                    float smorzatore_luce=1.0;
+                    if(dotFromDirection<0.0){                     
+                        smorzatore_luce=0.0;
+                    }else{
+                        smorzatore_luce=clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
+                    }
+                    currentDepth = projectedTexcoord.z + u_bias;
+                    float projectedDepth_1 = texture2D(u_projectedTexture_1, projectedTexcoord.xy).r ;
+                    shadowLight_1 =(inRange && projectedDepth_1 <= currentDepth) ? 1.0 : (1.0-smorzatore_luce);
+                    if(!inRange ){
+                        shadowLight_1= 1.0;
+                    }
+                    //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione terreno)
+                    projectedTexcoord = v_projectedTexcoord_2.xyz / v_projectedTexcoord_2.w;
+                    inRange =
+                        projectedTexcoord.x >= 0.0 &&
+                        projectedTexcoord.x <= 1.0 &&
+                        projectedTexcoord.y >= 0.0 &&
+                        projectedTexcoord.y <= 1.0 && 
+                        projectedTexcoord.z >= 0.0 && 
+                        projectedTexcoord.z <= 1.0 
+                        ;              
+                    dotFromDirection = dot(normalize(v_surfaceToLight_AS),-u_lightDirection_AS);    
+                    if(dotFromDirection<0.0){                     
+                        smorzatore_luce = 0.0;
+                    }else{
+                        smorzatore_luce=clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
+                    }
+                    currentDepth = projectedTexcoord.z + u_bias;
+                    float projectedDepth_2 = texture2D(u_projectedTexture_2, projectedTexcoord.xy).r ;
+                    shadowLight_2 =(inRange && projectedDepth_2 <= currentDepth) ? 1.0 : (1.0-smorzatore_luce);
+                    if(!inRange){
+                        shadowLight_2= 1.0;
+                    }
+                    //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione faro stesso)    
+                    projectedTexcoord = v_projectedTexcoord_3.xyz / v_projectedTexcoord_3.w;
+                    inRange =
+                        projectedTexcoord.x >= 0.0 &&
+                        projectedTexcoord.x <= 1.0 &&
+                        projectedTexcoord.y >= 0.0 &&
+                        projectedTexcoord.y <= 1.0 && 
+                        projectedTexcoord.z >= 0.0 && 
+                        projectedTexcoord.z <= 1.0 
+                        ;
+                    currentDepth = projectedTexcoord.z + u_bias;
+                    float projectedDepth_3 = texture2D(u_projectedTexture_3, projectedTexcoord.xy).r ;
+                    shadowLight_3 =(inRange && projectedDepth_3 <= currentDepth) ? 1.0 : 0.0;
+                    if(!inRange){
+                        shadowLight_3= 1.0;
+                    }
+                    //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione faro stesso)
+                    projectedTexcoord = v_projectedTexcoord_4.xyz / v_projectedTexcoord_4.w;
+                    inRange =
+                        projectedTexcoord.x >= 0.0 &&
+                        projectedTexcoord.x <= 1.0 &&
+                        projectedTexcoord.y >= 0.0 &&
+                        projectedTexcoord.y <= 1.0 && 
+                        projectedTexcoord.z >= 0.0 && 
+                        projectedTexcoord.z <= 1.0 
+                        ;
+                    currentDepth = projectedTexcoord.z + u_bias;
+                    float projectedDepth_4 = texture2D(u_projectedTexture_4, projectedTexcoord.xy).r ;
+                    shadowLight_4 =(inRange && projectedDepth_4 <= currentDepth) ? 1.0 : 0.0;
+                    if(!inRange){
+                        shadowLight_4= 1.0;
+                    }
+                    //---------------------------------------------------------------------------------------------------
+                    shadowLight=illuminazione+ ( - shadowLight_1 * 0.2  - shadowLight_2 * 0.2 - shadowLight_0 * 0.6);
+                }
+                
 
                 if(blur_shadow > 0.0){
                     //blur manuale delle ombre
@@ -255,37 +370,43 @@
                 //aggiunto da me per poter disegnare un oggetto senza texture
                 vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);    
                 //vec4 texColor =  u_colorMult;
+          
                 gl_FragColor = vec4(
                     texColor.rgb * light * shadowLight +
                     specular * shadowLight,
                     texColor.a);
-
+                
 
         
-                if(shadowLight > 0.5){
-                    //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
+                //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
+                if(shadowLight_1 < 1.0){
+      
+                    //-------------------
                     vec3 surfaceToLightDirection_AD = normalize(v_surfaceToLight_AD);
                     halfVector = normalize(surfaceToLightDirection_AD + surfaceToViewDirection);
-                    dotFromDirection = dot(surfaceToLightDirection_AD,-u_lightDirection_AD);         
-                    limitRange = (u_innerLimit_A - u_outerLimit_A);       
+                    dotFromDirection = dot(surfaceToLightDirection_AD,-u_lightDirection_AD);      
                     inLight = clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
                     light = inLight * dot(normal, surfaceToLightDirection_AD);
-                    if (light > 0.0) {
-                        specular = pow(dot(normal, halfVector), u_shininess_A);  
-                        gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);   
-                    }
-                    //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione terreno)
+                   // if (light > 0.0) {
+                        specular = pow(dot(normal, halfVector), u_shininess_A) ;  
+                        gl_FragColor += vec4(texColor.rgb * u_lightColor_A.rgb * light  +  specular * u_specularColor_A,texColor.a);   
+                   //}
+                }
+                   
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione terreno)
+                if(shadowLight_2 < 1.0){
                     vec3 surfaceToLightDirection_AS = normalize(v_surfaceToLight_AS);
                     halfVector = normalize(surfaceToLightDirection_AS + surfaceToViewDirection);
-                    dotFromDirection = dot(surfaceToLightDirection_AS,-u_lightDirection_AS);         
-                    limitRange = (u_innerLimit_A - u_outerLimit_A);       
+                    dotFromDirection = dot(surfaceToLightDirection_AS,-u_lightDirection_AS);   
                     inLight = clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
                     light = inLight * dot(normal, surfaceToLightDirection_AS);
                     if (light > 0.0) {
                         specular = pow(dot(normal, halfVector), u_shininess_A);  
-                         gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);
+                         gl_FragColor += vec4(texColor.rgb * u_lightColor_A.rgb * light +  specular * u_specularColor_A,texColor.a);
                     }
-                    //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione faro stesso)
+                }
+                //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione faro stesso)
+                if(shadowLight_3 < 1.0){
                     vec3 surfaceToLightDirection_AD_sup = normalize(v_surfaceToLight_AD_sup);
                     halfVector = normalize(surfaceToLightDirection_AD_sup + surfaceToViewDirection);
                     dotFromDirection = dot(surfaceToLightDirection_AD_sup,- u_lightDirection_AD_sup);         
@@ -296,7 +417,9 @@
                         specular = pow(dot(normal, halfVector), u_shininess_A);  
                         gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);   
                     }
-                    //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione faro stesso)
+                }                
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione faro stesso)
+                if(shadowLight_4 < 1.0){
                     vec3 surfaceToLightDirection_AS_supp = normalize(v_surfaceToLight_AS_sup);
                     halfVector = normalize(surfaceToLightDirection_AS_supp + surfaceToViewDirection);
                     dotFromDirection = dot(surfaceToLightDirection_AS_supp,- u_lightDirection_AS_sup);         
@@ -307,11 +430,11 @@
                         specular = pow(dot(normal, halfVector), u_shininess_A);  
                          gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);
                     }
-    
-                    //----------------------------------------------------------------------------
-               
-          
                 }
+                    //----------------------------------------------------------------------------
+              
+          
+                //}
                
     
             }
@@ -384,6 +507,7 @@
         objs_car.obj_wheel=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj')
         var car = new Car(objs_car);
         var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c_t.obj');
+        cubo.translate(0,-1.0,0);
         //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
         // var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
         //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/m.obj',true);
