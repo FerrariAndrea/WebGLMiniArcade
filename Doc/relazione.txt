@@ -69,5 +69,5 @@ aggiungere luci auto (luce proiettata dai fari davanti)
 webgl-3d-lighting-point-color
 è stato molto complesso aggiungere le ombre anche per le luci secondarie, ad ogni modo se il blure_ombre è attivo, smetto di proiettare le ombre delle luci secondarie ( si veda this.blur_shadow)
 aggiunto smorzatore ombre per le luci dell'auto, così da non vedere il taglio netto sulle superfici (smorzatore_luce)  (SPrint7_5.png)
-aggiunti fari posteriori
+aggiunti fari posteriori (con regolazione in frenata)
 

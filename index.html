@@ -76,11 +76,18 @@
             varying vec3 v_surfaceToLight_AD;
             uniform vec3 u_lightWorldPosition_AS;
             varying vec3 v_surfaceToLight_AS;
+            
+         
 
             uniform vec3 u_lightWorldPosition_AD_sup;
             varying vec3 v_surfaceToLight_AD_sup;
             uniform vec3 u_lightWorldPosition_AS_sup;
             varying vec3 v_surfaceToLight_AS_sup;
+
+            uniform vec3 u_lightWorldPosition_PD_sup;            
+            uniform vec3 u_lightWorldPosition_PS_sup;            
+            varying vec3 v_surfaceToLight_PS_sup;            
+            varying vec3 v_surfaceToLight_PD_sup;
 
             //ombre
             uniform mat4 u_textureMatrix_1;            
@@ -90,7 +97,11 @@
             uniform mat4 u_textureMatrix_3;            
             varying vec4 v_projectedTexcoord_3;            
             uniform mat4 u_textureMatrix_4;            
-            varying vec4 v_projectedTexcoord_4;
+            varying vec4 v_projectedTexcoord_4;                     
+            uniform mat4 u_textureMatrix_5;            
+            varying vec4 v_projectedTexcoord_5;         
+            uniform mat4 u_textureMatrix_6;            
+            varying vec4 v_projectedTexcoord_6;
             //----------------------------------------------------------------------------
 
             void main() {
@@ -119,23 +130,19 @@
             v_surfaceToView = u_viewWorldPosition - surfaceWorldPosition;
 
             //-------------------------------------------------------------------LUCI AUTO
-            // compute the vector of the surface to the light
-            // and pass it to the fragment shader
             v_surfaceToLight_AD = u_lightWorldPosition_AD - surfaceWorldPosition;
-            // compute the vector of the surface to the light
-            // and pass it to the fragment shader
             v_surfaceToLight_AS = u_lightWorldPosition_AS - surfaceWorldPosition;
-            // compute the vector of the surface to the light
-            // and pass it to the fragment shader
             v_surfaceToLight_AD_sup = u_lightWorldPosition_AD_sup - surfaceWorldPosition;
-            // compute the vector of the surface to the light
-            // and pass it to the fragment shader
             v_surfaceToLight_AS_sup = u_lightWorldPosition_AS_sup - surfaceWorldPosition;
+            v_surfaceToLight_PD_sup = u_lightWorldPosition_PD_sup - surfaceWorldPosition;
+            v_surfaceToLight_PS_sup = u_lightWorldPosition_PS_sup - surfaceWorldPosition;
             //---ombre
             v_projectedTexcoord_1 = u_textureMatrix_1 * worldPosition;            
             v_projectedTexcoord_2 = u_textureMatrix_2 * worldPosition;
             v_projectedTexcoord_3 = u_textureMatrix_3 * worldPosition;
             v_projectedTexcoord_4 = u_textureMatrix_4 * worldPosition;
+            v_projectedTexcoord_5 = u_textureMatrix_5 * worldPosition;
+            v_projectedTexcoord_6 = u_textureMatrix_6 * worldPosition;
             //----------------------------------------------------------------------------
 
             }
@@ -179,6 +186,7 @@
             //uniform vec4 u_color_A;
             uniform float u_shininess_A;
             uniform vec4 u_lightColor_A;
+            uniform vec4 u_lightColor_P;
             uniform vec3 u_specularColor_A;            
             uniform vec3 u_lightDirection_AS;                   
             uniform vec3 u_lightDirection_AD; 
@@ -190,7 +198,11 @@
             varying vec3 v_surfaceToLight_AS_sup;
             uniform vec3 u_lightDirection_AD_sup;
             uniform vec3 u_lightDirection_AS_sup;
-            
+            //superfice faro posteriore
+            varying vec3 v_surfaceToLight_PD_sup;
+            varying vec3 v_surfaceToLight_PS_sup;
+            uniform vec3 u_lightDirection_PD_sup;
+            uniform vec3 u_lightDirection_PS_sup;
 
             //ombre
             uniform sampler2D u_projectedTexture_1;            
@@ -201,6 +213,11 @@
             varying vec4 v_projectedTexcoord_3;            
             uniform sampler2D u_projectedTexture_4;            
             varying vec4 v_projectedTexcoord_4;    
+            uniform sampler2D u_projectedTexture_5;            
+            varying vec4 v_projectedTexcoord_5;    
+            uniform sampler2D u_projectedTexture_6;            
+            varying vec4 v_projectedTexcoord_6;    
+
             //----------------------------------------------------------------------------
 
             void main() {
@@ -237,6 +254,8 @@
                 float shadowLight_2 =1.0;
                 float shadowLight_3 =1.0;
                 float shadowLight_4 =1.0;
+                float shadowLight_5 =1.0;
+                float shadowLight_6 =1.0;
 
                 limitRange = (u_innerLimit_A - u_outerLimit_A);     
                 if(blur_shadow<=0.0){
@@ -318,6 +337,38 @@
                     shadowLight_4 =(inRange && projectedDepth_4 <= currentDepth) ? 1.0 : 0.0;
                     if(!inRange){
                         shadowLight_4= 1.0;
+                    }
+                    //-------------------------------------------------------------------LUCE AUTO DESTRA POSTERIORE (proiezione faro stesso)    
+                    projectedTexcoord = v_projectedTexcoord_5.xyz / v_projectedTexcoord_5.w;
+                    inRange =
+                        projectedTexcoord.x >= 0.0 &&
+                        projectedTexcoord.x <= 1.0 &&
+                        projectedTexcoord.y >= 0.0 &&
+                        projectedTexcoord.y <= 1.0 && 
+                        projectedTexcoord.z >= 0.0 && 
+                        projectedTexcoord.z <= 1.0 
+                        ;
+                    currentDepth = projectedTexcoord.z + u_bias;
+                    float projectedDepth_5 = texture2D(u_projectedTexture_5, projectedTexcoord.xy).r ;
+                    shadowLight_5 =(inRange && projectedDepth_5 <= currentDepth) ? 1.0 : 0.0;
+                    if(!inRange){
+                        shadowLight_5= 1.0;
+                    }
+                    //-------------------------------------------------------------------LUCE AUTO SINISTRA POSTERIORE (proiezione faro stesso)
+                    projectedTexcoord = v_projectedTexcoord_6.xyz / v_projectedTexcoord_6.w;
+                    inRange =
+                        projectedTexcoord.x >= 0.0 &&
+                        projectedTexcoord.x <= 1.0 &&
+                        projectedTexcoord.y >= 0.0 &&
+                        projectedTexcoord.y <= 1.0 && 
+                        projectedTexcoord.z >= 0.0 && 
+                        projectedTexcoord.z <= 1.0 
+                        ;
+                    currentDepth = projectedTexcoord.z + u_bias;
+                    float projectedDepth_6 = texture2D(u_projectedTexture_6, projectedTexcoord.xy).r ;
+                    shadowLight_6 =(inRange && projectedDepth_6 <= currentDepth) ? 1.0 : 0.0;
+                    if(!inRange){
+                        shadowLight_6= 1.0;
                     }
                     //---------------------------------------------------------------------------------------------------
                     shadowLight=illuminazione+ ( - shadowLight_1 * 0.2  - shadowLight_2 * 0.2 - shadowLight_0 * 0.6);
@@ -430,8 +481,34 @@
                         specular = pow(dot(normal, halfVector), u_shininess_A);  
                          gl_FragColor += vec4(u_lightColor_A.rgb * light +  specular * u_specularColor_A,u_lightColor_A.a);
                     }
+                } 
+                //-------------------------------------------------------------------LUCE AUTO DESTRA POSTERIORE (proiezione faro stesso)
+                if(shadowLight_5 < 1.0){
+                    vec3 surfaceToLightDirection_PD_sup = normalize(v_surfaceToLight_PD_sup);
+                    halfVector = normalize(surfaceToLightDirection_PD_sup + surfaceToViewDirection);
+                    dotFromDirection = dot(surfaceToLightDirection_PD_sup,- u_lightDirection_PD_sup);         
+                    limitRange = (0.9990 -  0.99144);       
+                    inLight = clamp((dotFromDirection -  0.99144) / limitRange, 0.0, 1.0);
+                    light = inLight * dot(normal, surfaceToLightDirection_PD_sup);
+                    if (light > 0.0) {
+                        specular = pow(dot(normal, halfVector), u_shininess_A);  
+                        gl_FragColor += vec4(u_lightColor_P.rgb * light*2.0 +  specular * u_specularColor_A,u_lightColor_P.a);   
+                    }
+                }                
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA POSTERIORE (proiezione faro stesso)
+                if(shadowLight_6 < 1.0){
+                    vec3 surfaceToLightDirection_PS_supp = normalize(v_surfaceToLight_PS_sup);
+                    halfVector = normalize(surfaceToLightDirection_PS_supp + surfaceToViewDirection);
+                    dotFromDirection = dot(surfaceToLightDirection_PS_supp,- u_lightDirection_PS_sup);         
+                    limitRange = (0.9990 -  0.99144);       
+                    inLight = clamp((dotFromDirection -  0.99144) / limitRange, 0.0, 1.0);
+                    light = inLight * dot(normal, surfaceToLightDirection_PS_supp);
+                    if (light > 0.0) {
+                        specular = pow(dot(normal, halfVector), u_shininess_A);  
+                         gl_FragColor += vec4(u_lightColor_P.rgb * light*2.0 +  specular * u_specularColor_A,u_lightColor_P.a);
+                    }
                 }
-                    //----------------------------------------------------------------------------
+                //----------------------------------------------------------------------------
               
           
                 //}
@@ -548,9 +625,9 @@
             }
         }
         window.ta=function(x,y,z){
-            car.fari_sup_dest[0]=x;
-            car.fari_sup_dest[1]=y;
-            car.fari_sup_dest[2]=z;
+            car.posRel_faro_pd.x=x;
+            car.posRel_faro_pd.y=y;
+            car.posRel_faro_pd.z=z;
         }
         window.ebs=function(enable){
             GamePanel.blur_shadow=enable;
