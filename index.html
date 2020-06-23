@@ -61,7 +61,9 @@
             uniform mat4 u_projection;
             uniform mat4 u_view;
             uniform mat4 u_world;
-            uniform mat4 u_textureMatrix;
+            uniform mat4 u_textureMatrix;            
+            uniform mat4 specchioMatrix;
+            
 
             varying vec2 v_texcoord;
             varying vec4 v_projectedTexcoord;
@@ -105,11 +107,12 @@
             //----------------------------------------------------------------------------
 
             void main() {
+            mat4 internal_u_world =u_world * specchioMatrix;
             // Multiply the position by the matrix.
-            vec4 worldPosition = u_world * a_position;
+            vec4 worldPosition = internal_u_world * a_position;
 
-            gl_Position = u_projection * u_view * worldPosition;
-            //gl_Position = u_projection * u_view * Mmatrix * worldPosition;
+            gl_Position = u_projection * u_view * specchioMatrix  * worldPosition;
+            //gl_Position = u_projection * u_view * specchioMatrix  * Mmatrix * worldPosition;
 
             // Pass the texture coord to the fragment shader.
             v_texcoord = a_texcoord;
@@ -117,10 +120,10 @@
             v_projectedTexcoord = u_textureMatrix * worldPosition;
 
             // orient the normals and pass to the fragment shader
-            v_normal = mat3(u_world) * a_normal;
+            v_normal = mat3(internal_u_world ) * a_normal;
 
             // compute the world position of the surface
-            vec3 surfaceWorldPosition = (u_world * a_position).xyz;
+            vec3 surfaceWorldPosition = (internal_u_world * a_position).xyz;
 
             // compute the vector of the surface to the light
             // and pass it to the fragment shader
@@ -517,11 +520,12 @@
             }
           
             </script>
-            <script id="color-vertex-shader" type="x-shader/x-vertex">
+        <script id="color-vertex-shader" type="x-shader/x-vertex">
                 //uniform mat4 Mmatrix; 
 
                 attribute vec4 a_position;
-                
+          
+
                 uniform mat4 u_projection;
                 uniform mat4 u_view;
                 uniform mat4 u_world;
@@ -531,17 +535,39 @@
                   gl_Position = u_projection * u_view * u_world * a_position;
                   //gl_Position = u_projection * u_view * Mmatrix * u_world * a_position;
                 }
-                </script>
+        </script>
                 <!-- fragment shader -->
-                <script id="color-fragment-shader" type="x-shader/x-fragment">
+        <script id="color-fragment-shader" type="x-shader/x-fragment">
                 precision mediump float;
                 
                 uniform vec4 u_color;
                 void main() {
                   gl_FragColor = u_color;
                 }
-                </script>
+         </script>
         <!-- WebGLControllerV2 -----FINE-->
+        <script id="stencil-vertex-shader" type="x-shader/x-vertex">
+            attribute vec4 a_position;
+
+            uniform mat4 u_projection;
+            uniform mat4 u_view;       
+            uniform mat4 u_world;
+
+            void main() 
+            {
+                gl_Position = u_projection*u_view*u_world*a_position;
+            } 
+        </script>
+            
+        <script id="stencil-fragment-shader" type="x-shader/x-fragment">
+            precision mediump float;
+
+
+            void main()
+            {
+                gl_FragColor = vec4(1.0,0.0,0.0,1.0);
+            }
+         </script>
    
     </body>
 
@@ -556,6 +582,8 @@
     <script type="text/javascript" src="lib/Obj3DClone.js"></script>    
     <script type="text/javascript" src="lib/Car.js"></script>    
     <script type="text/javascript" src="lib/Ombre.js"></script>
+    <script type="text/javascript" src="lib/Specchio.js"></script>
+
 
     <script type="text/javascript" src="resources/subdiv.js"></script>
   <script type="text/javascript" src="resources/mesh_utils.js"></script>
@@ -605,29 +633,36 @@
         window.renderGL= GamePanel.render;
         window.showParam=function(){
             console.log("------------------GamePanel.param----");
-            console.log("near",GamePanel.near);
-            console.log("far",GamePanel.far);
-            console.log("(??)radius",GamePanel.radius);
-            console.log("(angolo y) theta°",radToDeg(GamePanel.theta));
-            console.log("(angolo x) phi°",radToDeg(GamePanel.phi));
-            console.log("(??)dr",GamePanel.dr);
-            console.log("(asse z) fov",GamePanel.fov);
+            console.log("settings",GamePanel.settings);
             console.log("------------------GamePanel.param----");
         }
-        window.setParam=function(name,value,convertDegToRad=false,stamp=true){
-            if(convertDegToRad){
-                GamePanel[name]=degToRad(value);
-            }else{
-                GamePanel[name]=value;
-            }           
-            if(stamp){
-                window.showParam();
-            }
+        window.setParam=function(r,t,p){
+            GamePanel.settings.radius=r; 
+            // var my_T =t;
+            // if(my_T>360){
+            //     my_T-=360;
+            // }else if(my_T<0){
+            //     my_T+=360;
+            // } 
+               
+
+            // var my_P = p;
+           
+            // if(my_P>90){
+            //     my_P=180-my_P;
+            // }else if(my_P===90){
+            //     my_P=89.999;
+            // }else if(my_P<=-90){
+            //     my_P+=90;
+            // }
+
+            GamePanel.settings.theta=degToRad(t); 
+            GamePanel.settings.phi= degToRad(p);  
         }
         window.ta=function(x,y,z){
-            car.posRel_faro_pd.x=x;
-            car.posRel_faro_pd.y=y;
-            car.posRel_faro_pd.z=z;
+            GamePanel.settings.cameraX=x;
+            GamePanel.settings.cameraY=y;   
+            GamePanel.settings.cameraZ=z;             
         }
         window.ebs=function(enable){
             GamePanel.blur_shadow=enable;

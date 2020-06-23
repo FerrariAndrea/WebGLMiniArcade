@@ -71,3 +71,6 @@ webgl-3d-lighting-point-color
 aggiunto smorzatore ombre per le luci dell'auto, così da non vedere il taglio netto sulle superfici (smorzatore_luce)  (SPrint7_5.png)
 aggiunti fari posteriori (con regolazione in frenata)
 
+Sprint8)
+Sono riuscito ad usare lo stancil buffer per provare di fare una superficie a specchio, ma sembra che qualcosa pulisca l'immagine tra una draw e l'altra (credo sia colpa dell ombre)
+
