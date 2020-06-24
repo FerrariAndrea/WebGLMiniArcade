@@ -579,10 +579,10 @@
     <script type="text/javascript" src="lib/Panel2D.js"></script>
     <script type="text/javascript" src="lib/WebGLController.js"></script>    
     <script type="text/javascript" src="lib/Obj3D.js"></script>    
-    <script type="text/javascript" src="lib/Obj3DClone.js"></script>    
-    <script type="text/javascript" src="lib/Car.js"></script>    
+    <script type="text/javascript" src="lib/Car.js"></script>        
     <script type="text/javascript" src="lib/Ombre.js"></script>
     <script type="text/javascript" src="lib/Specchio.js"></script>
+    <script type="text/javascript" src="lib/Pista.js"></script>
 
 
     <script type="text/javascript" src="resources/subdiv.js"></script>
@@ -590,8 +590,9 @@
   <script type="text/javascript" src="resources/webgl-utils.js"></script>
   <script type="text/javascript" src="resources/m4.js"></script>      
   <script  type="text/javascript" src="resources/glm_light.js"></script>
-
   <script type="text/javascript" src="resources/primitives.js"></script>
+  <script type="text/javascript" src="resources/anmglib.js"></script>
+
   <script type="text/javascript" src="webgl-debug.js"></script>
 
     <script type="text/javascript">
@@ -611,14 +612,11 @@
         objs_car.obj_car=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/texture.bmp');
         objs_car.obj_wheel=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj')
         var car = new Car(objs_car);
-        var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c_t.obj');
-        cubo.translate(0,-1.0,0);
-        //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/pista.obj',true);
-        // var cubo =new Obj3D('http://11.0.0.15/cg/Esame/3D/c.obj',true);
-        //var car =new Obj3D('http://11.0.0.15/cg/Esame/3D/m.obj',true);
-        //car.translate(5,5,5);
+        var cubo =new Obj3D('http://'+localhost+'/cg/Esame/3D/c_t.obj');
+        cubo.translate(0,-1.0,5.0);
+        var pista = new Pista();
         objs.push(car); 
-        //objs.push(pista);
+        objs.push(pista);
         objs.push(cubo);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);
         car.enableThouch(true, document.getElementById("gamePanel"));
