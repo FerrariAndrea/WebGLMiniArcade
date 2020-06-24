@@ -73,8 +73,12 @@ aggiunti fari posteriori (con regolazione in frenata)
 
 Sprint8)
 Sono riuscito ad usare lo stancil buffer per provare di fare una superficie a specchio, ma sembra che qualcosa pulisca l'immagine tra una draw e l'altra (credo sia colpa dell ombre)
-superficie a specchio finita, compresa di ombre e luci, gestita con lo stencil buffer, la rotazione della camera e l'inversione dei 3D sull'asse dello specchio
-lo specchio è centrato nell'origine per semplicità
+Per ottenere una specchiatura abbastanza realistica, il draw della scena nel mondo dello specchio, preserva le luci e le ombre, ruoto di 180° la visuale e specchio con scale l'asse su cui giace lo specchio,
+per facilità lo specchio si trova nell'origine, in questo modo lo specchio funziona da qualsiasi punto di angolazione della camera (che punta nell'origine)
 
-Sprint9) generare la pista tramite una curva doppia di baizier, e poi interpolarne i punti per generare i triangoli
+Sprint9)
+Curva di basier 2d per il tracciato 
 
+Sprint10)
+skybox
+e manipolazione della camera (migliorie)
