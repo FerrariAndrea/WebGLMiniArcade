@@ -616,8 +616,9 @@
         car.translate(0,0,10.0);
         var pista = new Pista();
         var mondo = new Mondo();        
+        
+        objs.push(car); //IMPORTANTE che la car sia il primo OBJ per far si che la camera sull'auto funzioni correttamente
         objs.push(mondo);
-        objs.push(car); 
         objs.push(pista);
         objs.push(cubo);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);        

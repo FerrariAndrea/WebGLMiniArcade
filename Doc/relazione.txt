@@ -81,4 +81,5 @@ Curva di basier 2d per il tracciato
 
 Sprint10)
 skybox
-e manipolazione della camera (migliorie)
+e manipolazione della camera (free)
+ControlPanel aggiunta pulsantiera per la camera (free e passaggio a dinamica)
