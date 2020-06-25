@@ -613,7 +613,14 @@
         cubo.translate(0,0,5.0);
         car.translate(0,0,10.0);
         var pista = new Pista();
-        var mondo = new Mondo();        
+        const mondoFaceTexture = [];
+        mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo1.bmp');        
+        mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo2.bmp');        
+        mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo3.bmp');        
+        mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo4.bmp');        
+        mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo5.bmp');        
+        mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo6.bmp');
+        var mondo = new Mondo(mondoFaceTexture);        
         
         objs.push(car); //IMPORTANTE che la car sia il primo OBJ per far si che la camera sull'auto funzioni correttamente
         objs.push(mondo);
