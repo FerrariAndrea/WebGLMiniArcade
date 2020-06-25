@@ -139,7 +139,7 @@
             v_surfaceToLight_AS_sup = u_lightWorldPosition_AS_sup - surfaceWorldPosition;
             v_surfaceToLight_PD_sup = u_lightWorldPosition_PD_sup - surfaceWorldPosition;
             v_surfaceToLight_PS_sup = u_lightWorldPosition_PS_sup - surfaceWorldPosition;
-            //---ombre
+            //---ombre (fari auto)
             v_projectedTexcoord_1 = u_textureMatrix_1 * worldPosition;            
             v_projectedTexcoord_2 = u_textureMatrix_2 * worldPosition;
             v_projectedTexcoord_3 = u_textureMatrix_3 * worldPosition;
@@ -603,9 +603,7 @@
             gp.width=gp.clientWidth;
             gp.height=gp.clientHeight; 
         }       
-        var ControlPanel = new Panel2D(document.getElementById("controlPanel"));
         var objs=[];
-        //Gt86_5000poly_closed
         const localhost = document.location.host;
         const objs_car = {};
         objs_car.obj_car=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/texture.bmp');
@@ -623,7 +621,7 @@
         objs.push(cubo);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);        
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"),GamePanel);
-        car.enableThouch(true, document.getElementById("gamePanel"));
+        car.enableThouch(true, document.getElementById("gamePanel"));//per mobile
         GamePanel.requestAnimationEnabled=true;
         ControlPanel.requestAnimationEnabled=true;
         dinamicResize();
