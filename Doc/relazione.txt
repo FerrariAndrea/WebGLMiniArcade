@@ -83,3 +83,14 @@ Sprint10)
 skybox
 e manipolazione della camera (free)
 ControlPanel aggiunta pulsantiera per la camera (free e passaggio a dinamica)
+
+Sprint11)
+oggetti di scena
+più luci come lampioni 
+aggiunta cartellone con la mia foto
+aggiunto negozzio (in cui risiede lo specchio)
+oscurato lo specchio
+
+Sprint12)
+aggiunta modalità Drift disattivabile
+aggiutno GameBehavior

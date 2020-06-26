@@ -55,23 +55,33 @@
             
          
             uniform vec3 u_viewWorldPosition;
-            uniform vec3 u_lightWorldPosition;
 
 
             uniform mat4 u_projection;
             uniform mat4 u_view;
-            uniform mat4 u_world;
-            uniform mat4 u_textureMatrix;            
+            uniform mat4 u_world;      
             uniform mat4 specchioMatrix;
             
 
             varying vec2 v_texcoord;
-            varying vec4 v_projectedTexcoord;
             varying vec3 v_normal;
 
-            varying vec3 v_surfaceToLight;
+ 
             varying vec3 v_surfaceToView;
-
+            //-------------------------------------------------------------------LUCI Mondo
+            uniform mat4 u_textureMatrix_m1;            
+            varying vec4 v_projectedTexcoord_m1;              
+            uniform vec3 u_lightWorldPosition_m1;
+            uniform mat4 u_textureMatrix_m2;            
+            varying vec4 v_projectedTexcoord_m2;              
+            uniform vec3 u_lightWorldPosition_m2;
+            uniform mat4 u_textureMatrix_m3;           
+            varying vec4 v_projectedTexcoord_m3;             
+            uniform vec3 u_lightWorldPosition_m3;
+           
+            varying vec3 v_surfaceToLight_m1;
+            varying vec3 v_surfaceToLight_m2;
+            varying vec3 v_surfaceToLight_m3;
 
             //-------------------------------------------------------------------LUCI AUTO
             uniform vec3 u_lightWorldPosition_AD;
@@ -117,7 +127,9 @@
             // Pass the texture coord to the fragment shader.
             v_texcoord = a_texcoord;
 
-            v_projectedTexcoord = u_textureMatrix * worldPosition;
+            v_projectedTexcoord_m1 = u_textureMatrix_m1 * worldPosition;
+            v_projectedTexcoord_m2 = u_textureMatrix_m2 * worldPosition;
+            v_projectedTexcoord_m3 = u_textureMatrix_m3 * worldPosition;
 
             // orient the normals and pass to the fragment shader
             v_normal = mat3(internal_u_world ) * a_normal;
@@ -127,7 +139,10 @@
 
             // compute the vector of the surface to the light
             // and pass it to the fragment shader
-            v_surfaceToLight = u_lightWorldPosition - surfaceWorldPosition;
+            v_surfaceToLight_m1 = u_lightWorldPosition_m1 - surfaceWorldPosition;            
+            v_surfaceToLight_m2 = u_lightWorldPosition_m2 - surfaceWorldPosition;            
+            v_surfaceToLight_m3 = u_lightWorldPosition_m3 - surfaceWorldPosition;
+
             // compute the vector of the surface to the view/camera
             // and pass it to the fragment shader
             v_surfaceToView = u_viewWorldPosition - surfaceWorldPosition;
@@ -157,17 +172,14 @@
 
             // Passed in from the vertex shader.
             varying vec2 v_texcoord;
-            varying vec4 v_projectedTexcoord;
             varying vec3 v_normal;
-            varying vec3 v_surfaceToLight;
             varying vec3 v_surfaceToView;
             uniform vec4 u_colorMult;
-            uniform sampler2D u_texture;
-            uniform sampler2D u_projectedTexture;        
+            uniform sampler2D u_texture; 
             uniform float u_bias;
             uniform float u_shininess;
 
-            uniform vec3 u_lightDirection; 
+            
 
             uniform float blur_shadow;
 
@@ -182,6 +194,23 @@
             float rand(vec2 co){
                 return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
             }
+
+            
+            //-------------------------------------------------------------------LUCI Mondo
+            varying vec3 v_surfaceToLight_m1;
+            varying vec4 v_projectedTexcoord_m1;            
+            uniform sampler2D u_projectedTexture_m1;      
+            uniform vec3 u_lightDirection_m1;  
+
+            varying vec3 v_surfaceToLight_m2;
+            varying vec4 v_projectedTexcoord_m2;            
+            uniform sampler2D u_projectedTexture_m2;   
+            uniform vec3 u_lightDirection_m2;   
+
+            varying vec3 v_surfaceToLight_m3;
+            varying vec4 v_projectedTexcoord_m3;            
+            uniform sampler2D u_projectedTexture_m3; 
+            uniform vec3 u_lightDirection_m3;   
 
             //-------------------------------------------------------------------LUCI AUTO
             varying vec3 v_surfaceToLight_AD;        
@@ -228,31 +257,65 @@
                 // so it will not be a unit vector. Normalizing it
                 // will make it a unit vector again
                 vec3 normal = normalize(v_normal);
-
-                vec3 surfaceToLightDirection = normalize(v_surfaceToLight);
-
+                ///--------------------------------------------------------------------------------------LUCI MONDO
+                float limitRange = u_innerLimit - u_outerLimit;
+                //----- m1
+                vec3 surfaceToLightDirection = normalize(v_surfaceToLight_m1);
                 vec3 surfaceToViewDirection = normalize(v_surfaceToView);
                 vec3 halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);  
-                float dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection);
-                                            
-                float limitRange = u_innerLimit - u_outerLimit;
-                float inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.0, 1.0);
-                float light = inLight * dot(normal, surfaceToLightDirection);
-                float specular = inLight * pow(dot(normal, halfVector), u_shininess);
-    
-                vec3 projectedTexcoord = v_projectedTexcoord.xyz / v_projectedTexcoord.w;
-                float currentDepth = projectedTexcoord.z + u_bias;
-    
+                float dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection_m1);        
+                float inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.5, 1.0);
+                float light_m1 = inLight * dot(normal, surfaceToLightDirection);
+                float specular = inLight * pow(dot(normal, halfVector), u_shininess);    
+                vec3 projectedTexcoord = v_projectedTexcoord_m1.xyz / v_projectedTexcoord_m1.w;
+                float currentDepth = projectedTexcoord.z + u_bias;    
                 bool inRange =
                     projectedTexcoord.x >= 0.0 &&
                     projectedTexcoord.x <= 1.0 &&
                     projectedTexcoord.y >= 0.0 &&
-                    projectedTexcoord.y <= 1.0;
-    
+                    projectedTexcoord.y <= 1.0;    
                 // the 'r' channel has the depth values
-                float projectedDepth = texture2D(u_projectedTexture, projectedTexcoord.xy).r ;
-                float shadowLight_0 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
-                float shadowLight=illuminazione-shadowLight_0;
+                float projectedDepth = texture2D(u_projectedTexture_m1, projectedTexcoord.xy).r ;
+                float shadowLight_m1 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
+                //----- m2
+                surfaceToLightDirection = normalize(v_surfaceToLight_m2);
+                surfaceToViewDirection = normalize(v_surfaceToView);
+                halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);  
+                dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection_m2);        
+                inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.5, 1.0);
+                float light_m2 = inLight * dot(normal, surfaceToLightDirection);
+                specular = inLight * pow(dot(normal, halfVector), u_shininess);    
+                projectedTexcoord = v_projectedTexcoord_m2.xyz / v_projectedTexcoord_m2.w;
+                currentDepth = projectedTexcoord.z + u_bias;    
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0;    
+                // the 'r' channel has the depth values
+                projectedDepth = texture2D(u_projectedTexture_m2, projectedTexcoord.xy).r ;
+                float shadowLight_m2 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
+                //----- m3
+                surfaceToLightDirection = normalize(v_surfaceToLight_m3);
+                surfaceToViewDirection = normalize(v_surfaceToView);
+                halfVector = normalize(surfaceToLightDirection + surfaceToViewDirection);  
+                dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection_m3);        
+                inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.5, 1.0);
+                float light_m3 = inLight * dot(normal, surfaceToLightDirection);
+                specular = inLight * pow(dot(normal, halfVector), u_shininess);    
+                projectedTexcoord = v_projectedTexcoord_m3.xyz / v_projectedTexcoord_m3.w;
+                currentDepth = projectedTexcoord.z + u_bias;    
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0;    
+                // the 'r' channel has the depth values
+                projectedDepth = texture2D(u_projectedTexture_m3, projectedTexcoord.xy).r ;
+                float shadowLight_m3 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
+
+                ///-----------------------------------------------------------------------------------------------------------------------------------------------------------
+               
                 float shadowLight_1 =1.0;
                 float shadowLight_2 =1.0;
                 float shadowLight_3 =1.0;
@@ -261,124 +324,130 @@
                 float shadowLight_6 =1.0;
 
                 limitRange = (u_innerLimit_A - u_outerLimit_A);     
-                if(blur_shadow<=0.0){
-                    //solo se il blur delle ombre non è attivo
-                    //ombre luci auto
-                    //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
-                    projectedTexcoord = v_projectedTexcoord_1.xyz / v_projectedTexcoord_1.w;
-                    inRange =
-                        projectedTexcoord.x >= 0.0 &&
-                        projectedTexcoord.x <= 1.0 &&
-                        projectedTexcoord.y >= 0.0 &&
-                        projectedTexcoord.y <= 1.0 && 
-                        projectedTexcoord.z >= 0.0 && 
-                        projectedTexcoord.z <= 1.0 
-                        ;                                     
-                    dotFromDirection = dot(normalize(v_surfaceToLight_AD),-u_lightDirection_AD);    
-                    float smorzatore_luce=1.0;
-                    if(dotFromDirection<0.0){                     
-                        smorzatore_luce=0.0;
-                    }else{
-                        smorzatore_luce=clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
-                    }
-                    currentDepth = projectedTexcoord.z + u_bias;
-                    float projectedDepth_1 = texture2D(u_projectedTexture_1, projectedTexcoord.xy).r ;
-                    shadowLight_1 =(inRange && projectedDepth_1 <= currentDepth) ? 1.0 : (1.0-smorzatore_luce);
-                    if(!inRange ){
-                        shadowLight_1= 1.0;
-                    }
-                    //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione terreno)
-                    projectedTexcoord = v_projectedTexcoord_2.xyz / v_projectedTexcoord_2.w;
-                    inRange =
-                        projectedTexcoord.x >= 0.0 &&
-                        projectedTexcoord.x <= 1.0 &&
-                        projectedTexcoord.y >= 0.0 &&
-                        projectedTexcoord.y <= 1.0 && 
-                        projectedTexcoord.z >= 0.0 && 
-                        projectedTexcoord.z <= 1.0 
-                        ;              
-                    dotFromDirection = dot(normalize(v_surfaceToLight_AS),-u_lightDirection_AS);    
-                    if(dotFromDirection<0.0){                     
-                        smorzatore_luce = 0.0;
-                    }else{
-                        smorzatore_luce=clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
-                    }
-                    currentDepth = projectedTexcoord.z + u_bias;
-                    float projectedDepth_2 = texture2D(u_projectedTexture_2, projectedTexcoord.xy).r ;
-                    shadowLight_2 =(inRange && projectedDepth_2 <= currentDepth) ? 1.0 : (1.0-smorzatore_luce);
-                    if(!inRange){
-                        shadowLight_2= 1.0;
-                    }
-                    //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione faro stesso)    
-                    projectedTexcoord = v_projectedTexcoord_3.xyz / v_projectedTexcoord_3.w;
-                    inRange =
-                        projectedTexcoord.x >= 0.0 &&
-                        projectedTexcoord.x <= 1.0 &&
-                        projectedTexcoord.y >= 0.0 &&
-                        projectedTexcoord.y <= 1.0 && 
-                        projectedTexcoord.z >= 0.0 && 
-                        projectedTexcoord.z <= 1.0 
-                        ;
-                    currentDepth = projectedTexcoord.z + u_bias;
-                    float projectedDepth_3 = texture2D(u_projectedTexture_3, projectedTexcoord.xy).r ;
-                    shadowLight_3 =(inRange && projectedDepth_3 <= currentDepth) ? 1.0 : 0.0;
-                    if(!inRange){
-                        shadowLight_3= 1.0;
-                    }
-                    //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione faro stesso)
-                    projectedTexcoord = v_projectedTexcoord_4.xyz / v_projectedTexcoord_4.w;
-                    inRange =
-                        projectedTexcoord.x >= 0.0 &&
-                        projectedTexcoord.x <= 1.0 &&
-                        projectedTexcoord.y >= 0.0 &&
-                        projectedTexcoord.y <= 1.0 && 
-                        projectedTexcoord.z >= 0.0 && 
-                        projectedTexcoord.z <= 1.0 
-                        ;
-                    currentDepth = projectedTexcoord.z + u_bias;
-                    float projectedDepth_4 = texture2D(u_projectedTexture_4, projectedTexcoord.xy).r ;
-                    shadowLight_4 =(inRange && projectedDepth_4 <= currentDepth) ? 1.0 : 0.0;
-                    if(!inRange){
-                        shadowLight_4= 1.0;
-                    }
-                    //-------------------------------------------------------------------LUCE AUTO DESTRA POSTERIORE (proiezione faro stesso)    
-                    projectedTexcoord = v_projectedTexcoord_5.xyz / v_projectedTexcoord_5.w;
-                    inRange =
-                        projectedTexcoord.x >= 0.0 &&
-                        projectedTexcoord.x <= 1.0 &&
-                        projectedTexcoord.y >= 0.0 &&
-                        projectedTexcoord.y <= 1.0 && 
-                        projectedTexcoord.z >= 0.0 && 
-                        projectedTexcoord.z <= 1.0 
-                        ;
-                    currentDepth = projectedTexcoord.z + u_bias;
-                    float projectedDepth_5 = texture2D(u_projectedTexture_5, projectedTexcoord.xy).r ;
-                    shadowLight_5 =(inRange && projectedDepth_5 <= currentDepth) ? 1.0 : 0.0;
-                    if(!inRange){
-                        shadowLight_5= 1.0;
-                    }
-                    //-------------------------------------------------------------------LUCE AUTO SINISTRA POSTERIORE (proiezione faro stesso)
-                    projectedTexcoord = v_projectedTexcoord_6.xyz / v_projectedTexcoord_6.w;
-                    inRange =
-                        projectedTexcoord.x >= 0.0 &&
-                        projectedTexcoord.x <= 1.0 &&
-                        projectedTexcoord.y >= 0.0 &&
-                        projectedTexcoord.y <= 1.0 && 
-                        projectedTexcoord.z >= 0.0 && 
-                        projectedTexcoord.z <= 1.0 
-                        ;
-                    currentDepth = projectedTexcoord.z + u_bias;
-                    float projectedDepth_6 = texture2D(u_projectedTexture_6, projectedTexcoord.xy).r ;
-                    shadowLight_6 =(inRange && projectedDepth_6 <= currentDepth) ? 1.0 : 0.0;
-                    if(!inRange){
-                        shadowLight_6= 1.0;
-                    }
-                    //---------------------------------------------------------------------------------------------------
-                    shadowLight=illuminazione+ ( - shadowLight_1 * 0.2  - shadowLight_2 * 0.2 - shadowLight_0 * 0.6);
+                //ombre luci auto
+                //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
+                projectedTexcoord = v_projectedTexcoord_1.xyz / v_projectedTexcoord_1.w;
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0 && 
+                    projectedTexcoord.z >= 0.0 && 
+                    projectedTexcoord.z <= 1.0 
+                    ;                                     
+                dotFromDirection = dot(normalize(v_surfaceToLight_AD),-u_lightDirection_AD);    
+                float smorzatore_luce=1.0;
+                if(dotFromDirection<0.0){                     
+                    smorzatore_luce=0.0;
+                }else{
+                    smorzatore_luce=clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
                 }
+                currentDepth = projectedTexcoord.z + u_bias;
+                float projectedDepth_1 = texture2D(u_projectedTexture_1, projectedTexcoord.xy).r ;
+                shadowLight_1 =(inRange && projectedDepth_1 <= currentDepth) ? 1.0 : (1.0-smorzatore_luce);
+                if(!inRange ){
+                    shadowLight_1= 1.0;
+                }
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione terreno)
+                projectedTexcoord = v_projectedTexcoord_2.xyz / v_projectedTexcoord_2.w;
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0 && 
+                    projectedTexcoord.z >= 0.0 && 
+                    projectedTexcoord.z <= 1.0 
+                    ;              
+                dotFromDirection = dot(normalize(v_surfaceToLight_AS),-u_lightDirection_AS);    
+                if(dotFromDirection<0.0){                     
+                    smorzatore_luce = 0.0;
+                }else{
+                    smorzatore_luce=clamp((dotFromDirection - u_outerLimit_A) / limitRange, 0.0, 1.0);
+                }
+                currentDepth = projectedTexcoord.z + u_bias;
+                float projectedDepth_2 = texture2D(u_projectedTexture_2, projectedTexcoord.xy).r ;
+                shadowLight_2 =(inRange && projectedDepth_2 <= currentDepth) ? 1.0 : (1.0-smorzatore_luce);
+                if(!inRange){
+                    shadowLight_2= 1.0;
+                }
+                //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione faro stesso)    
+                projectedTexcoord = v_projectedTexcoord_3.xyz / v_projectedTexcoord_3.w;
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0 && 
+                    projectedTexcoord.z >= 0.0 && 
+                    projectedTexcoord.z <= 1.0 
+                    ;
+                currentDepth = projectedTexcoord.z + u_bias;
+                float projectedDepth_3 = texture2D(u_projectedTexture_3, projectedTexcoord.xy).r ;
+                shadowLight_3 =(inRange && projectedDepth_3 <= currentDepth) ? 1.0 : 0.0;
+                if(!inRange){
+                    shadowLight_3= 1.0;
+                }
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione faro stesso)
+                projectedTexcoord = v_projectedTexcoord_4.xyz / v_projectedTexcoord_4.w;
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0 && 
+                    projectedTexcoord.z >= 0.0 && 
+                    projectedTexcoord.z <= 1.0 
+                    ;
+                currentDepth = projectedTexcoord.z + u_bias;
+                float projectedDepth_4 = texture2D(u_projectedTexture_4, projectedTexcoord.xy).r ;
+                shadowLight_4 =(inRange && projectedDepth_4 <= currentDepth) ? 1.0 : 0.0;
+                if(!inRange){
+                    shadowLight_4= 1.0;
+                }
+                //-------------------------------------------------------------------LUCE AUTO DESTRA POSTERIORE (proiezione faro stesso)    
+                projectedTexcoord = v_projectedTexcoord_5.xyz / v_projectedTexcoord_5.w;
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0 && 
+                    projectedTexcoord.z >= 0.0 && 
+                    projectedTexcoord.z <= 1.0 
+                    ;
+                currentDepth = projectedTexcoord.z + u_bias;
+                float projectedDepth_5 = texture2D(u_projectedTexture_5, projectedTexcoord.xy).r ;
+                shadowLight_5 =(inRange && projectedDepth_5 <= currentDepth) ? 1.0 : 0.0;
+                if(!inRange){
+                    shadowLight_5= 1.0;
+                }
+                //-------------------------------------------------------------------LUCE AUTO SINISTRA POSTERIORE (proiezione faro stesso)
+                projectedTexcoord = v_projectedTexcoord_6.xyz / v_projectedTexcoord_6.w;
+                inRange =
+                    projectedTexcoord.x >= 0.0 &&
+                    projectedTexcoord.x <= 1.0 &&
+                    projectedTexcoord.y >= 0.0 &&
+                    projectedTexcoord.y <= 1.0 && 
+                    projectedTexcoord.z >= 0.0 && 
+                    projectedTexcoord.z <= 1.0 
+                    ;
+                currentDepth = projectedTexcoord.z + u_bias;
+                float projectedDepth_6 = texture2D(u_projectedTexture_6, projectedTexcoord.xy).r ;
+                shadowLight_6 =(inRange && projectedDepth_6 <= currentDepth) ? 1.0 : 0.0;
+                if(!inRange){
+                    shadowLight_6= 1.0;
+                }
+                 ///-----------------------------------------------------------------------------------------------------------------------------------------------------------
                 
+                //calcolo il risultato finale di tutte le luci sia del mondo che dell'auto
+                float shadowLight=1.0+ ( 
+                    - shadowLight_1 * 0.05  
+                    - shadowLight_2 * 0.05 
+                    - shadowLight_m1 * 0.3
+                    - shadowLight_m2 * 0.3
+                    - shadowLight_m3 * 0.3
+                    );
+               
 
                 if(blur_shadow > 0.0){
+                /*
                     //blur manuale delle ombre
                     //if(shadowLight>0.0){
                     //    //se il punto attuale non è un pezzo dell'ombra, aumento comunque la sua ombra in base alla distanza da altri px in ombra
@@ -418,19 +487,17 @@
                             }
                         }
                     }
-                
+                */
                 }
          
-                //aggiunto da me per poter disegnare un oggetto senza texture
+                //aggiunto per poter disegnare un oggetto senza texture
                 vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);    
                 //vec4 texColor =  u_colorMult;
-          
+                float light = illuminazione + (light_m1 + light_m2 + light_m3)/3.0;
                 gl_FragColor = vec4(
                     texColor.rgb * light * shadowLight +
                     specular * shadowLight,
                     texColor.a);
-                
-
         
                 //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
                 if(shadowLight_1 < 1.0){
@@ -607,12 +674,7 @@
         const localhost = document.location.host;
         const objs_car = {};
         objs_car.obj_car=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/texture.bmp');
-        objs_car.obj_wheel=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj')
-        var car = new Car(objs_car);
-        var cubo =new Obj3D('http://'+localhost+'/cg/Esame/3D/c_t.obj');
-        cubo.translate(0,0,5.0);
-        car.translate(0,0,10.0);
-        var pista = new Pista();
+        objs_car.obj_wheel=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.bmp');
         const mondoFaceTexture = [];
         mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo1.bmp');        
         mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo2.bmp');        
@@ -620,12 +682,41 @@
         mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo4.bmp');        
         mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo5.bmp');        
         mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo6.bmp');
-        var mondo = new Mondo(mondoFaceTexture);        
+        var mondo = new Mondo(mondoFaceTexture);     
+        var car = new Car(objs_car);        
+        var pista = new Pista();
+        var luceDaCampo_m1 =new Obj3D('http://'+localhost+'/cg/Esame/3D/luceDaCampo.obj');  
+        var luceDaCampo_m2 =new Obj3D('http://'+localhost+'/cg/Esame/3D/luceDaCampo.obj');         
+        var luceDaCampo_m3 =new Obj3D('http://'+localhost+'/cg/Esame/3D/luceDaCampo.obj');  
+       
+        var negozio =new Obj3D('http://'+localhost+'/cg/Esame/3D/negozio/Negozio.obj',false,'http://'+localhost+'/cg/Esame/3D/negozio/negozio.bmp');      
+        var cartellone_mia_foto =new Obj3D('http://'+localhost+'/cg/Esame/3D/cartellone/cartello.obj',false,'http://'+localhost+'/cg/Esame/3D/cartellone/cartello.bmp');      
+       
+        cartellone_mia_foto.translate(-25,-1,5);
+        cartellone_mia_foto.rotate(30,"y");
+        negozio.mirror_bl=true;
+        negozio.translate(0,0,0.18);        
+        negozio.rotate(90,"y")
+        luceDaCampo_m1.translate(-25,0,-5);   
+        luceDaCampo_m1.rotate(200,"y");  
+        luceDaCampo_m1.mirror_bl=true;             
+        luceDaCampo_m2.translate(24,0,-15);                       
+        luceDaCampo_m2.rotate(-30,"y");   
+        luceDaCampo_m2.mirror_bl=true;             
+        luceDaCampo_m3.translate(35,0,5);              
+        luceDaCampo_m3.rotate(160,"y");     
+        luceDaCampo_m3.mirror_bl=true;   
+        car.translate(0,0,10.0);
         
-        objs.push(car); //IMPORTANTE che la car sia il primo OBJ per far si che la camera sull'auto funzioni correttamente
+        //IMPORTANTE che la car sia il primo OBJ per far si che la camera sull'auto funzioni correttamente
+        objs.push(car); 
         objs.push(mondo);
         objs.push(pista);
-        objs.push(cubo);
+        objs.push(luceDaCampo_m1);           
+        objs.push(luceDaCampo_m2);          
+        objs.push(luceDaCampo_m3);       
+        objs.push(negozio);       
+        objs.push(cartellone_mia_foto);
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);        
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"),GamePanel);
         car.enableThouch(true, document.getElementById("gamePanel"));//per mobile
