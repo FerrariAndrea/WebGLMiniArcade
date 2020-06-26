@@ -649,7 +649,8 @@
     <script type="text/javascript" src="lib/Car.js"></script>        
     <script type="text/javascript" src="lib/Ombre.js"></script>
     <script type="text/javascript" src="lib/Pista.js"></script>
-    <script type="text/javascript" src="lib/Mondo.js"></script>
+    <script type="text/javascript" src="lib/Mondo.js"></script>    
+    <script type="text/javascript" src="lib/GameBehavior.js"></script>
 
     <script type="text/javascript" src="resources/subdiv.js"></script>
   <script type="text/javascript" src="resources/mesh_utils.js"></script>
@@ -706,9 +707,9 @@
         luceDaCampo_m3.translate(35,0,5);              
         luceDaCampo_m3.rotate(160,"y");     
         luceDaCampo_m3.mirror_bl=true;   
-        car.translate(0,0,10.0);
         
-        //IMPORTANTE che la car sia il primo OBJ per far si che la camera sull'auto funzioni correttamente
+        //IMPORTANTE che la car sia il primo OBJ per far si che la camera sull'auto funzioni correttamente 
+        //e anche per la selezione della modalità di gioco
         objs.push(car); 
         objs.push(mondo);
         objs.push(pista);
@@ -716,9 +717,11 @@
         objs.push(luceDaCampo_m2);          
         objs.push(luceDaCampo_m3);       
         objs.push(negozio);       
-        objs.push(cartellone_mia_foto);
+        objs.push(cartellone_mia_foto);        
+        var Game = new GameBehavior(car);//gestore dei punteggi 
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);        
-        var ControlPanel = new Panel2D(document.getElementById("controlPanel"),GamePanel);
+        var ControlPanel = new Panel2D(document.getElementById("controlPanel"),GamePanel,Game);
+
         car.enableThouch(true, document.getElementById("gamePanel"));//per mobile
         GamePanel.requestAnimationEnabled=true;
         ControlPanel.requestAnimationEnabled=true;
@@ -733,8 +736,7 @@
             console.log("------------------GamePanel.param----");
             console.log("settings",GamePanel.settings);
             console.log("------------------GamePanel.param----");
-        }
-  
+        }  
         window.ta=function(x,y,z){
             GamePanel.settings.cameraX=x;
             GamePanel.settings.cameraY=y;   
@@ -743,10 +745,12 @@
         window.ebs=function(enable){
             GamePanel.blur_shadow=enable;
         }   
+        //finisco la fase di setting
         GamePanel.fpsCounterFunction=function rsetFtpcounter(val){
             ControlPanel.fpscounter=Math.round(val);
         }
         ControlPanel.update();
+        //aspetto che tutte le textur siano state caricate
         StartWhenReady(objs,function(){
             GamePanel.init();
             GamePanel.update();
