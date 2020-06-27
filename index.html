@@ -735,7 +735,7 @@
         window.addEventListener("resize",dinamicResize);
     </script>
     <script type="text/javascript">
-        //PER FACILITARE IL DEBUG
+        //------------PER FACILITARE IL DEBUG
         window.render2D= ControlPanel.render;            
         window.renderGL= GamePanel.render;
         window.showParam=function(){
@@ -751,7 +751,7 @@
         window.ebs=function(enable){
             GamePanel.blur_shadow=enable;
         }   
-        //finisco la fase di setting
+        //-----------------finisco la fase di setting
         GamePanel.fpsCounterFunction=function rsetFtpcounter(val){
             ControlPanel.fpscounter=Math.round(val);
         }
@@ -797,6 +797,9 @@
                 car.enableKeyboard(true); //attivo i comandi da tastiera dell'auto        
                 car.enableThouch(true, document.getElementById("gamePanel"));//per mobile
                 car.active(true); //attivo il doStep dell'auto
+                //aggiungo i comandi del mouse sul canvas del gioco per poter modificare la View 
+                //(se di tipo free, non funzioneranno con la view di tipo dinamica, ovvero che segue l'auto)
+                addMouseEventOnGame(document.getElementById("gamePanel"),GamePanel);//funzione presente in utility.js
                 //attivo il render
                 GamePanel.init();
                 GamePanel.update();
