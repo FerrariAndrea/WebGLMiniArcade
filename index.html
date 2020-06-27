@@ -675,7 +675,12 @@
         const localhost = document.location.host;
         const objs_car = {};
         objs_car.obj_car=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/Gt86_5000poly_closed.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/texture.bmp');
-        objs_car.obj_wheel=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.bmp');
+        objs_car.obj_wheel=new Obj3D('http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.obj',false,'http://'+localhost+'/cg/Esame/3D/gt86/ruote/ruota.bmp');          
+        objs_car.warning =new Obj3D('http://'+localhost+'/cg/Esame/3D/warning.obj'); 
+        objs_car.warning.changeColor([1.0,0.0,0.0,1.0]);
+        objs_car.crash=new Obj3D('http://'+localhost+'/cg/Esame/3D/crash.obj'); 
+        objs_car.crash.changeColor([1.0,0.0,0.0,1.0]);
+
         const mondoFaceTexture = [];
         mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo1.bmp');        
         mondoFaceTexture.push('http://'+localhost+'/cg/Esame/3D/mondo/mondo2.bmp');        
@@ -688,11 +693,9 @@
         var pista = new Pista();
         var luceDaCampo_m1 =new Obj3D('http://'+localhost+'/cg/Esame/3D/luceDaCampo.obj');  
         var luceDaCampo_m2 =new Obj3D('http://'+localhost+'/cg/Esame/3D/luceDaCampo.obj');         
-        var luceDaCampo_m3 =new Obj3D('http://'+localhost+'/cg/Esame/3D/luceDaCampo.obj');  
-       
+        var luceDaCampo_m3 =new Obj3D('http://'+localhost+'/cg/Esame/3D/luceDaCampo.obj');         
         var negozio =new Obj3D('http://'+localhost+'/cg/Esame/3D/negozio/Negozio.obj',false,'http://'+localhost+'/cg/Esame/3D/negozio/negozio.bmp');      
-        var cartellone_mia_foto =new Obj3D('http://'+localhost+'/cg/Esame/3D/cartellone/cartello.obj',false,'http://'+localhost+'/cg/Esame/3D/cartellone/cartello.bmp');      
-       
+        var cartellone_mia_foto =new Obj3D('http://'+localhost+'/cg/Esame/3D/cartellone/cartello.obj',false,'http://'+localhost+'/cg/Esame/3D/cartellone/cartello.bmp');  
         cartellone_mia_foto.translate(-25,-1,5);
         cartellone_mia_foto.rotate(30,"y");
         negozio.mirror_bl=true;
@@ -708,6 +711,8 @@
         luceDaCampo_m3.rotate(160,"y");     
         luceDaCampo_m3.mirror_bl=true;   
         
+   
+
         //IMPORTANTE che la car sia il primo OBJ per far si che la camera sull'auto funzioni correttamente 
         //e anche per la selezione della modalità di gioco
         objs.push(car); 
@@ -722,7 +727,8 @@
         var GamePanel = new WebGLController(document.getElementById("gamePanel"),objs);        
         var ControlPanel = new Panel2D(document.getElementById("controlPanel"),GamePanel,Game);
 
-        car.enableThouch(true, document.getElementById("gamePanel"));//per mobile
+
+    
         GamePanel.requestAnimationEnabled=true;
         ControlPanel.requestAnimationEnabled=true;
         dinamicResize();
@@ -752,9 +758,49 @@
         ControlPanel.update();
         //aspetto che tutte le textur siano state caricate
         StartWhenReady(objs,function(){
-            GamePanel.init();
-            GamePanel.update();
-            document.getElementById("loading").style.display="none";
+                //genero la funzione che mi permette di capire se l'auto
+                // è in pista o se è uscita (usata nei punteggi)
+                //e la passo alla macchina
+                car.pista_bound= pista.getFuncAppartieneAllaPista();
+                // console.log("pista_bound-->",car.pista_bound);
+                //la funzione seguente restituisce la funzione di validazione della posizione dell'auto
+                //riferita agli oggetti di scena
+                //ipedendo alla macchina di entrare dentro gli oggetti
+                const array_objs_bound =[];
+                //genero le funzioni che gestiscono gli ostacoli 
+                array_objs_bound.push(mondo.getBound());   
+                array_objs_bound.push(luceDaCampo_m1.getBound());        
+                array_objs_bound.push(luceDaCampo_m2.getBound());        
+                array_objs_bound.push(luceDaCampo_m3.getBound());            
+                array_objs_bound.push(negozio.getBound());                  
+                array_objs_bound.push(cartellone_mia_foto.getBound());
+                //le unisco ed aggiungo anche uno "spessore" all'auto,
+                //considerando dal baricentro un range di pixel
+                //per alleggerire il carico esegui le funzioni di appartenenza discretizzando di 0.2 in 0.2
+                //in sostanza gli oggetti più piccoli di 0.2 potrebbero passare attraverso alla macchina
+                const range_x = 0.4;
+                const range_y=1.0;
+                car.obj_bound= function(x,y){
+                        for(var i=0;i<array_objs_bound.length;i++){
+                            for(var k = -range_x;k<range_x ;k+=0.2){
+                                for(var j = -range_y;j<range_y ;j+=0.2){
+                                    if(!array_objs_bound[i](x+k,y+j)){
+                                        return false; //hai sbattuto contro qualcosa
+                                    }
+                                }
+                            }
+                           
+                        }
+                        return true;//tutto ok
+                }
+                //attivo la macchina
+                car.enableKeyboard(true); //attivo i comandi da tastiera dell'auto        
+                car.enableThouch(true, document.getElementById("gamePanel"));//per mobile
+                car.active(true); //attivo il doStep dell'auto
+                //attivo il render
+                GamePanel.init();
+                GamePanel.update();
+                document.getElementById("loading").style.display="none";
         });
     </script>
 
