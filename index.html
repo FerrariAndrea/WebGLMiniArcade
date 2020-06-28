@@ -64,10 +64,16 @@
             
 
             varying vec2 v_texcoord;
-            varying vec3 v_normal;
-
- 
+            varying vec3 v_normal; 
             varying vec3 v_surfaceToView;
+
+            //diffusione luce ambientale
+            uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+            uniform vec4 lightPosition;            
+            uniform float shininess;
+            varying vec4 fColor;//risultato
+
+
             //-------------------------------------------------------------------LUCI Mondo
             uniform mat4 u_textureMatrix_m1;            
             varying vec4 v_projectedTexcoord_m1;              
@@ -117,9 +123,34 @@
             //----------------------------------------------------------------------------
 
             void main() {
+
+
+     
+
+           //mondo dentro lo specchio o meno, a seconda di specchioMatrix
             mat4 internal_u_world =u_world * specchioMatrix;
             // Multiply the position by the matrix.
             vec4 worldPosition = internal_u_world * a_position;
+
+            //-------------------------------------------diffusione ambientale luce  
+            vec3 L = normalize(  lightPosition.xyz +worldPosition.xyz );
+            vec3 E = normalize(worldPosition.xyz);
+            vec3 H = normalize( L + E );
+            vec4 NN = vec4(a_normal,0);
+            // Transform vertex normal into eye coordinates       
+            vec3 N = normalize( (u_view*NN).xyz);
+            // Compute terms in the illumination equation
+            vec4 ambient = ambientProduct;        
+            float Kd = max( dot(L, N), 0.0 );
+            vec4  diffuse = Kd*diffuseProduct;        
+            float Ks = pow( max(dot(N, H), 0.0), shininess );
+            vec4  specular = Ks * specularProduct;            
+            if( dot(L, N) < 0.0 ) {
+                specular = vec4(0.0, 0.0, 0.0, 1.0);
+            } 
+            fColor = ambient + diffuse + specular;    
+            fColor.a = 1.0;
+            //-------------------------------------------
 
             gl_Position = u_projection * u_view * specchioMatrix  * worldPosition;
             //gl_Position = u_projection * u_view * specchioMatrix  * Mmatrix * worldPosition;
@@ -183,6 +214,7 @@
 
             uniform float blur_shadow;
 
+
             uniform float u_innerLimit;          // in dot space
             uniform float u_outerLimit;          // in dot space
             //
@@ -190,12 +222,9 @@
 
             //aggiunto per poter disegnare un oggetto senza texture
             uniform float texture_enable; 
-            //aggiunto per poter calcolare un numero randomico 
-            float rand(vec2 co){
-                return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
-            }
+            //colore dovuto alla luce ambientale            
+            varying vec4 fColor;
 
-            
             //-------------------------------------------------------------------LUCI Mondo
             varying vec3 v_surfaceToLight_m1;
             varying vec4 v_projectedTexcoord_m1;            
@@ -253,6 +282,7 @@
             //----------------------------------------------------------------------------
 
             void main() {
+
                 // because v_normal is a varying it's interpolated
                 // so it will not be a unit vector. Normalizing it
                 // will make it a unit vector again
@@ -277,6 +307,26 @@
                 // the 'r' channel has the depth values
                 float projectedDepth = texture2D(u_projectedTexture_m1, projectedTexcoord.xy).r ;
                 float shadowLight_m1 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
+                                  
+                if(inRange && blur_shadow > 0.0){       //---------------------------blur shadow             
+                    //eseguo una serie di rotazioni delle coordinate della texture 
+                    //per ottere un blur delle ombre
+                    float blurCord_x =  projectedTexcoord.x;                    
+                    float blurCord_y =  projectedTexcoord.y;
+                    float blur =0.0;
+                    float rotationCount = 0.0;
+                    for(float b=-0.02;b<0.02;b+=0.001){ //eseguo delle rotazioni da poco più di -1 gradi a +1 gradi dell'ombra
+                        float blurCord_x_new =  blurCord_x*cos(b)-blurCord_y*sin(b);                    
+                        float blurCord_y_new =  blurCord_y*cos(b)+blurCord_x*sin(b);                          
+                        vec2 blureCord = vec2(blurCord_x_new,blurCord_y_new);
+                        float blurDepth = texture2D( u_projectedTexture_m1, blureCord).r; 
+                        blur+=(blurDepth <= currentDepth) ? 1.0 : 0.0;
+                        rotationCount+=1.0;  
+                    }
+                    //applico
+                    shadowLight_m1 =(shadowLight_m1 +blur)/rotationCount;
+                }
+
                 //----- m2
                 surfaceToLightDirection = normalize(v_surfaceToLight_m2);
                 surfaceToViewDirection = normalize(v_surfaceToView);
@@ -284,7 +334,7 @@
                 dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection_m2);        
                 inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.5, 1.0);
                 float light_m2 = inLight * dot(normal, surfaceToLightDirection);
-                specular = inLight * pow(dot(normal, halfVector), u_shininess);    
+                specular += inLight * pow(dot(normal, halfVector), u_shininess);    
                 projectedTexcoord = v_projectedTexcoord_m2.xyz / v_projectedTexcoord_m2.w;
                 currentDepth = projectedTexcoord.z + u_bias;    
                 inRange =
@@ -295,6 +345,24 @@
                 // the 'r' channel has the depth values
                 projectedDepth = texture2D(u_projectedTexture_m2, projectedTexcoord.xy).r ;
                 float shadowLight_m2 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
+                if(inRange && blur_shadow > 0.0){  //---------------------------blur shadow
+                    //eseguo una serie di rotazioni delle coordinate della texture 
+                    //per ottere un blur delle ombre
+                    float blurCord_x =  projectedTexcoord.x;                    
+                    float blurCord_y =  projectedTexcoord.y;
+                    float blur =0.0;
+                    float rotationCount = 0.0;
+                    for(float b=-0.02;b<0.02;b+=0.001){ //eseguo delle rotazioni da poco più di -1 gradi a +1 gradi dell'ombra
+                        float blurCord_x_new =  blurCord_x*cos(b)-blurCord_y*sin(b);                    
+                        float blurCord_y_new =  blurCord_y*cos(b)+blurCord_x*sin(b);                          
+                        vec2 blureCord = vec2(blurCord_x_new,blurCord_y_new);
+                        float blurDepth = texture2D(u_projectedTexture_m2, blureCord).r; 
+                        blur+=(blurDepth <= currentDepth) ? 1.0 : 0.0;
+                        rotationCount+=1.0;  
+                    }
+                    //applico
+                    shadowLight_m2 =(shadowLight_m2 +blur)/rotationCount;
+                }
                 //----- m3
                 surfaceToLightDirection = normalize(v_surfaceToLight_m3);
                 surfaceToViewDirection = normalize(v_surfaceToView);
@@ -302,7 +370,7 @@
                 dotFromDirection = dot(surfaceToLightDirection,-u_lightDirection_m3);        
                 inLight = clamp((dotFromDirection - u_outerLimit) / limitRange, 0.5, 1.0);
                 float light_m3 = inLight * dot(normal, surfaceToLightDirection);
-                specular = inLight * pow(dot(normal, halfVector), u_shininess);    
+                specular += inLight * pow(dot(normal, halfVector), u_shininess);    
                 projectedTexcoord = v_projectedTexcoord_m3.xyz / v_projectedTexcoord_m3.w;
                 currentDepth = projectedTexcoord.z + u_bias;    
                 inRange =
@@ -313,7 +381,27 @@
                 // the 'r' channel has the depth values
                 projectedDepth = texture2D(u_projectedTexture_m3, projectedTexcoord.xy).r ;
                 float shadowLight_m3 =(inRange && projectedDepth <= currentDepth) ? 1.0 : 0.0;
+                if(inRange && blur_shadow > 0.0){  //---------------------------blur shadow
+                    //eseguo una serie di rotazioni delle coordinate della texture 
+                    //per ottere un blur delle ombre
+                    float blurCord_x =  projectedTexcoord.x;                    
+                    float blurCord_y =  projectedTexcoord.y;
+                    float blur =0.0;
+                    float rotationCount = 0.0;
+                    for(float b=-0.02;b<0.02;b+=0.001){ //eseguo delle rotazioni da poco più di -1 gradi a +1 gradi dell'ombra
+                        float blurCord_x_new =  blurCord_x*cos(b)-blurCord_y*sin(b);                    
+                        float blurCord_y_new =  blurCord_y*cos(b)+blurCord_x*sin(b);                          
+                        vec2 blureCord = vec2(blurCord_x_new,blurCord_y_new);
+                        float blurDepth = texture2D(u_projectedTexture_m3, blureCord).r; 
+                        blur+=(blurDepth <= currentDepth) ? 1.0 : 0.0;
+                        rotationCount+=1.0;  
+                    }
+                    //applico
+                    shadowLight_m3 =(shadowLight_m3 +blur)/rotationCount;
+                }
 
+
+                specular=0.0;//rimuovo lo specular dalle 3 luci da campo, dato che viene riflesso sulla skybox generando 3 soli (effetto indesiderato)
                 ///-----------------------------------------------------------------------------------------------------------------------------------------------------------
                
                 float shadowLight_1 =1.0;
@@ -348,6 +436,24 @@
                 if(!inRange ){
                     shadowLight_1= 1.0;
                 }
+                if(inRange && blur_shadow > 0.0){  //---------------------------blur shadow
+                    //eseguo una serie di rotazioni delle coordinate della texture 
+                    //per ottere un blur delle ombre
+                    float blurCord_x =  projectedTexcoord.x;                    
+                    float blurCord_y =  projectedTexcoord.y;
+                    float blur =0.0;
+                    float rotationCount = 0.0;
+                    for(float b=-0.02;b<0.02;b+=0.001){ //eseguo delle rotazioni da poco più di -1 gradi a +1 gradi dell'ombra
+                        float blurCord_x_new =  blurCord_x*cos(b)-blurCord_y*sin(b);                    
+                        float blurCord_y_new =  blurCord_y*cos(b)+blurCord_x*sin(b);                          
+                        vec2 blureCord = vec2(blurCord_x_new,blurCord_y_new);
+                        float blurDepth = texture2D(u_projectedTexture_1, blureCord).r; 
+                        blur+=(blurDepth <= currentDepth) ? 1.0 : 0.0;
+                        rotationCount+=1.0;  
+                    }
+                    //applico
+                    shadowLight_1 =(shadowLight_1 +blur)/rotationCount;
+                }
                 //-------------------------------------------------------------------LUCE AUTO SINISTRA (proiezione terreno)
                 projectedTexcoord = v_projectedTexcoord_2.xyz / v_projectedTexcoord_2.w;
                 inRange =
@@ -369,6 +475,24 @@
                 shadowLight_2 =(inRange && projectedDepth_2 <= currentDepth) ? 1.0 : (1.0-smorzatore_luce);
                 if(!inRange){
                     shadowLight_2= 1.0;
+                }
+                if(inRange && blur_shadow > 0.0){  //---------------------------blur shadow
+                    //eseguo una serie di rotazioni delle coordinate della texture 
+                    //per ottere un blur delle ombre
+                    float blurCord_x =  projectedTexcoord.x;                    
+                    float blurCord_y =  projectedTexcoord.y;
+                    float blur =0.0;
+                    float rotationCount = 0.0;
+                    for(float b=-0.02;b<0.02;b+=0.001){ //eseguo delle rotazioni da poco più di -1 gradi a +1 gradi dell'ombra
+                        float blurCord_x_new =  blurCord_x*cos(b)-blurCord_y*sin(b);                    
+                        float blurCord_y_new =  blurCord_y*cos(b)+blurCord_x*sin(b);                          
+                        vec2 blureCord = vec2(blurCord_x_new,blurCord_y_new);
+                        float blurDepth = texture2D(u_projectedTexture_2, blureCord).r; 
+                        blur+=(blurDepth <= currentDepth) ? 1.0 : 0.0;
+                        rotationCount+=1.0;  
+                    }
+                    //applico
+                    shadowLight_2 =(shadowLight_2 +blur)/rotationCount;
                 }
                 //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione faro stesso)    
                 projectedTexcoord = v_projectedTexcoord_3.xyz / v_projectedTexcoord_3.w;
@@ -434,7 +558,7 @@
                 if(!inRange){
                     shadowLight_6= 1.0;
                 }
-                 ///-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                ///-----------------------------------------------------------------------------------------------------------------------------------------------------------
                 
                 //calcolo il risultato finale di tutte le luci sia del mondo che dell'auto
                 float shadowLight=1.0+ ( 
@@ -443,60 +567,18 @@
                     - shadowLight_m1 * 0.3
                     - shadowLight_m2 * 0.3
                     - shadowLight_m3 * 0.3
-                    );
-               
+                    );  
 
-                if(blur_shadow > 0.0){
-                /*
-                    //blur manuale delle ombre
-                    //if(shadowLight>0.0){
-                    //    //se il punto attuale non è un pezzo dell'ombra, aumento comunque la sua ombra in base alla distanza da altri px in ombra
-                    //    float intensita = 0.0;
-                    //    for(float x=0.0 ; x<0.001; x += 0.01){
-                    //        for(float y=0.0; y<0.001; y += 0.01){
-                    //            if((projectedTexcoord.x + x) < 1.0 && (projectedTexcoord.y + y) < 1.0){                            
-                    //                vec4 temp_coord=vec4(projectedTexcoord.x+x,projectedTexcoord.y+y,projectedTexcoord.z,1.0);
-                    //                float projectedDepth_2=texture2D(u_projectedTexture, temp_coord.xy).r;
-                    //                intensita += (inRange && projectedDepth_2 <= currentDepth) ? 1.0 : 0.001;
-                    //            }
-                    //        }
-                    //    }
-                    //    shadowLight=shadowLight-intensita;
-                    //}
-                    //Poisson Sampling
-                    vec2 poissonDisk_0 = vec2( -0.94201624, -0.39906216 );
-                    vec2 poissonDisk_1 = vec2( 0.94558609, -0.76890725 );
-                    vec2 poissonDisk_2 =  vec2( -0.094184101, -0.92938870 );
-                    vec2 poissonDisk_3 = vec2( 0.34495938, 0.29387760 );
-                    //-------------poisson blur
-                    if(shadowLight > 0.0){
-                        for (int i=0;i<16;i++){
-                            float index = rand(gl_FragCoord.xy);
-                            float temp=0.0;
-                            if(index>0.2){
-                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_0/blur_shadow ).r - currentDepth;                   
-                            }else if(index>0.4){
-                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_1/blur_shadow ).r - currentDepth;
-                            }else if(index>0.6){
-                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_2/blur_shadow ).r - currentDepth;
-                            }else{
-                                temp=texture2D( u_projectedTexture, projectedTexcoord.xy + poissonDisk_3/blur_shadow ).r - currentDepth;
-                            }
-                            if(temp<0.0){
-                                shadowLight +=  temp  ;
-                            }
-                        }
-                    }
-                */
-                }
-         
+                ///-----------------------------------------------------------------------------------------------------------------------------------------------------------
+                
+
+
                 //aggiunto per poter disegnare un oggetto senza texture
                 vec4 texColor = (texture_enable==0.0) ? (u_colorMult) : (texture2D(u_texture, v_texcoord) * u_colorMult);    
                 //vec4 texColor =  u_colorMult;
                 float light = illuminazione + (light_m1 + light_m2 + light_m3)/3.0;
                 gl_FragColor = vec4(
-                    texColor.rgb * light * shadowLight +
-                    specular * shadowLight,
+                    (texColor.rgb * light * shadowLight + specular * shadowLight )*fColor.rgb,
                     texColor.a);
         
                 //-------------------------------------------------------------------LUCE AUTO DESTRA (proiezione terreno)
