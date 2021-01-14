@@ -1,36 +1,6 @@
 <svg fill="none" viewBox="0 0 120 120" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
   <foreignObject width="100%" height="100%">
  
- <html>
-  <head>    
-
-      <title>Doc WebGLMiniArcade</title> 
-        <style>
-            p{
-                margin-left:2vw;                
-                margin-right:2vw;                
-                margin-top:0.2vw;                             
-                margin-bottom:0.2vw;
-                font-size: 2vmin;
-            }
-            h1{
-                margin-left:1vw;
-            }
-            h2{
-                margin-left:1.5vw;
-            }
-        </style>
-   </head>
-   
-   <!-- 
-       ò->&#242; 
-       ù->&#249; 
-       à->&#224; 
-       è->&#232; 
-       é->&#233; 
-       ì->&#236;
-    -->
-    <body style="width: 100%;height: 100%;margin: 0px;">
         <div style="width: 100%;height: 100%;display: flex;flex-wrap: nowrap;" >            
             <div style="height: 100%;width: 80%;background-color: darkcyan;">
                 <h1>Progetto d'esame Computer Graphics</h1>
@@ -383,9 +353,6 @@
                 </div>
                    
             </div>
-        </div>    
-    </body>    
-</html>
- 
+        </div>     
   </foreignObject>
 </svg>
